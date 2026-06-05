@@ -3,234 +3,416 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Administrasi Toserba Enak - Ritel Edition</title>
+    <title>Grup Chat & Absensi Karyawan - Toserba</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.5.29/dist/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
-        .login-container { max-width: 420px; margin: 70px auto; }
-        .btn-tab.active { background-color: #0dcaf0 !important; color: #000 !important; font-weight: bold; }
-        .chart-container { max-width: 100%; height: 280px; margin-top: 15px; }
-        .karyawan-table-container { max-height: 300px; overflow-y: auto; }
-        .absen-scroll-container { max-height: 500px; overflow-y: auto; }
-        .table-absen thead th { position: sticky; top: 0; background: #343a40; z-index: 10; }
-        .filter-bar { background: #f8f9fa; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
-        .btn-hapus { transition: all 0.2s; }
-        .btn-hapus:hover { transform: scale(1.05); }
-        .toast-notif { position: fixed; bottom: 20px; right: 20px; z-index: 9999; min-width: 250px; }
-        .small-muted { font-size: 12px; color: #6c757d; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .card { border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; margin-bottom: 20px; }
+        .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px 15px 0 0; padding: 15px 20px; font-weight: bold; }
+        .card-header i, .card-header span { color: white !important; }
+        .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; }
+        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); color: white; }
+        .chat-box { height: 450px; overflow-y: auto; background: #f8f9fa; border-radius: 10px; padding: 15px; }
+        .login-card { max-width: 450px; margin: 100px auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .online-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+        .online { background-color: #28a745; box-shadow: 0 0 5px #28a745; animation: pulse 1.5s infinite; }
+        .offline { background-color: #6c757d; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .toast-notif { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: none; }
+        .message-bubble { max-width: 70%; word-wrap: break-word; }
+        .bg-gradient-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .table-responsive { overflow-x: auto; }
+        .btn-excel { background: #28a745; color: white; }
+        .btn-excel:hover { background: #218838; color: white; }
+        .btn-pdf { background: #dc3545; color: white; }
+        .btn-pdf:hover { background: #c82333; color: white; }
+        .agenda-card { cursor: pointer; transition: all 0.3s; }
+        .agenda-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-<div id="screen-login" class="container">
-    <div class="card login-container shadow border-0">
-        <div class="card-header bg-dark text-white text-center py-3">
-            <h5 class="m-0 fw-bold"><i class="fa-solid fa-user-lock text-warning me-2"></i>Toserba Enak</h5>
-            <small class="text-muted">Ritel Internal Admin Gate</small>
-        </div>
-        <div class="card-body p-4">
-            <div id="login-alert" class="alert alert-danger d-none small"></div>
+<div class="container">
+    <!-- LAYAR LOGIN -->
+    <div id="screen-login">
+        <div class="login-card">
+            <div class="text-center mb-4">
+                <i class="fas fa-comments" style="font-size: 60px; color: #667eea;"></i>
+                <h2 class="mt-3">Grup Chat & Absensi</h2>
+                <p class="text-muted">Toserba Bang Joe</p>
+            </div>
+            
             <form id="formLogin" onsubmit="prosesLogin(event)">
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Username Admin</label>
-                    <input type="text" id="username" class="form-control form-control-sm" placeholder="adminenakkkk" required>
+                    <label class="form-label"><i class="fas fa-user"></i> Username</label>
+                    <input type="text" class="form-control" id="username" placeholder="Masukkan username" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small fw-bold">Password Security</label>
-                    <input type="password" id="password" class="form-control form-control-sm" placeholder="toserba2026" required>
+                    <label class="form-label"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Masukkan password" required>
                 </div>
-                <button type="submit" class="btn btn-dark btn-sm w-100 fw-bold">Masuk ke Sistem <i class="fa-solid fa-right-to-bracket ms-1"></i></button>
-                <div class="mt-3 small-muted">Login disimpan di session browser.</div>
+                <div id="login-alert" class="alert alert-danger d-none"></div>
+                <button type="submit" class="btn btn-gradient w-100">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
             </form>
+            
+            <hr class="my-4">
+            <div class="text-center">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> Admin: adminenakkkk / toserba2026
+                </small>
+            </div>
         </div>
     </div>
-</div>
 
-<div id="screen-main" class="d-none">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
-        <div class="container-fluid px-4">
-            <span class="navbar-brand fw-bold">
-                <i class="fa-solid fa-shop text-info me-2"></i>Toserba Enak
-                <span class="badge bg-danger fs-7 ms-2">Ritel Admin Panel</span>
-            </span>
-            <div class="navbar-nav ms-auto flex-row gap-2">
-                <button class="nav-link btn-tab active" onclick="bukaTab(event,'dashboard')"><i class="fa-solid fa-chart-pie me-1"></i> Utama</button>
-                <button class="nav-link btn-tab" onclick="bukaTab(event,'surat')"><i class="fa-solid fa-envelope me-1"></i> Surat</button>
-                <button class="nav-link btn-tab" onclick="bukaTab(event,'memo')"><i class="fa-solid fa-file-lines me-1"></i> Memo</button>
-                <button class="nav-link btn-tab" onclick="bukaTab(event,'absen')"><i class="fa-solid fa-calendar-check me-1"></i> Absen Ritel</button>
-                <button class="btn btn-sm btn-outline-danger ms-2" onclick="prosesLogout()"><i class="fa-solid fa-power-off"></i> Keluar</button>
+    <!-- LAYAR UTAMA -->
+    <div id="screen-main" class="d-none">
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark bg-gradient-custom mb-4 rounded-3">
+            <div class="container-fluid">
+                <span class="navbar-brand text-white">
+                    <i class="fas fa-users"></i> Grup Chat & Absensi Karyawan
+                </span>
+                <div class="d-flex">
+                    <span class="text-white me-3">
+                        <i class="fas fa-user"></i> <span id="currentUserDisplay" class="text-white">-</span>
+                    </span>
+                    <button class="btn btn-light btn-sm" onclick="prosesLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
 
-    <div class="container-fluid px-4">
-        <div id="tab-dashboard" class="tab-konten">
-            <div class="row g-3 mb-4">
-                <div class="col-md-3"><div class="card bg-primary text-white border-0 shadow-sm"><div class="card-body p-3"><h6 class="m-0 small">Surat Masuk</h6><h2 class="fw-bold m-0 mt-1" id="statSuratMasuk">0</h2></div></div></div>
-                <div class="col-md-3"><div class="card bg-warning text-dark border-0 shadow-sm"><div class="card-body p-3"><h6 class="m-0 small">Surat Keluar</h6><h2 class="fw-bold m-0 mt-1" id="statSuratKeluar">0</h2></div></div></div>
-                <div class="col-md-3"><div class="card bg-success text-white border-0 shadow-sm"><div class="card-body p-3"><h6 class="m-0 small">Karyawan Aktif</h6><h2 class="fw-bold m-0 mt-1" id="statKaryawanAktif">0</h2></div></div></div>
-                <div class="col-md-3"><div class="card bg-info text-white border-0 shadow-sm"><div class="card-body p-3"><h6 class="m-0 small">Total Karyawan</h6><h2 class="fw-bold m-0 mt-1" id="statTotalKaryawan">0</h2></div></div></div>
-            </div>
-            <div class="card border-0 shadow-sm p-4 bg-white">
-                <h4 class="fw-bold text-dark m-0">Selamat Datang di Panel Sistem Toserba Enak</h4>
-                <p class="text-muted small mt-1 mb-0">Data tersimpan di Firebase Realtime Database.</p>
-            </div>
-        </div>
+        <!-- Tab Menu -->
+        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active btn-tab" data-tab="chat" onclick="bukaTab(event, 'chat')">
+                    <i class="fas fa-comments"></i> Grup Chat
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link btn-tab" data-tab="absensi" onclick="bukaTab(event, 'absensi')">
+                    <i class="fas fa-calendar-check"></i> Absensi
+                </button>
+            </li>
+            <li class="nav-item" role="presentation" id="adminOnlyTabs" style="display: none;">
+                <button class="nav-link btn-tab" data-tab="karyawan" onclick="bukaTab(event, 'karyawan')">
+                    <i class="fas fa-users"></i> Kelola Karyawan
+                </button>
+            </li>
+            <li class="nav-item" role="presentation" id="adminOnlyTabs2" style="display: none;">
+                <button class="nav-link btn-tab" data-tab="agenda" onclick="bukaTab(event, 'agenda')">
+                    <i class="fas fa-book"></i> Agenda Surat
+                </button>
+            </li>
+            <li class="nav-item" role="presentation" id="adminOnlyTabs3" style="display: none;">
+                <button class="nav-link btn-tab" data-tab="memo" onclick="bukaTab(event, 'memo')">
+                    <i class="fas fa-file-alt"></i> Memo PDF
+                </button>
+            </li>
+        </ul>
 
-        <div id="tab-surat" class="tab-konten d-none">
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-5">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-dark text-white fw-bold small">Pencatatan Surat Baru</div>
+        <!-- TAB GRUP CHAT -->
+        <div id="tab-chat" class="tab-konten">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-circle text-success"></i> Online Now
+                        </div>
+                        <div class="card-body" id="activeUsersList" style="max-height: 300px; overflow-y: auto;">
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header bg-info">
+                            <i class="fas fa-chart-line"></i> Statistik
+                        </div>
                         <div class="card-body">
-                            <form id="formSurat" onsubmit="tambahSurat(event)">
-                                <div class="mb-2"><label class="small fw-bold">Jenis Surat</label><select id="jenisSurat" class="form-select form-select-sm"><option value="Masuk">Surat Masuk</option><option value="Keluar">Surat Keluar</option></select></div>
-                                <div class="mb-2"><label class="small fw-bold">Nomor Surat</label><input type="text" id="noSurat" class="form-control form-control-sm" required></div>
-                                <div class="mb-2"><label class="small fw-bold">Asal / Tujuan</label><input type="text" id="kontakSurat" class="form-control form-control-sm" required></div>
-                                <div class="mb-3"><label class="small fw-bold">Perihal</label><input type="text" id="perihalSurat" class="form-control form-control-sm" required></div>
-                                <button type="submit" class="btn btn-primary btn-sm w-100">Simpan Surat</button>
-                            </form>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Karyawan:</span>
+                                <strong id="statTotalKaryawan">0</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Online Sekarang:</span>
+                                <strong id="statOnlineNow">0</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Pesan Hari Ini:</span>
+                                <strong id="statPesanHariIni">0</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-8 col-md-7">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-secondary text-white fw-bold small d-flex justify-content-between align-items-center">
-                            <span>Arsip Log Surat</span>
-                            <button class="btn btn-sm btn-outline-light" onclick="backupSuratJSON()"><i class="fa-solid fa-download me-1"></i>Backup Surat</button>
+                
+                <div class="col-md-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-comment-dots"></i> Grup Chat Semua Karyawan
+                            <span class="badge bg-light text-dark ms-2" id="totalOnlineBadge">0 Online</span>
                         </div>
-                        <div class="card-body table-responsive p-0">
-                            <table class="table table-sm table-striped m-0 align-middle">
-                                <thead class="table-dark"><tr><th>Jenis</th><th>No. Surat</th><th>Asal/Tujuan</th><th>Perihal</th><th>Aksi</th></tr></thead>
-                                <tbody id="tabelSurat"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-memo" class="tab-konten d-none">
-            <div class="row g-4">
-                <div class="col-lg-5 col-md-6">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-info text-white fw-bold small">Generator Memo Internal</div>
                         <div class="card-body">
-                            <div class="mb-2"><label class="small fw-bold">Pengirim</label><input type="text" id="memoDari" class="form-control form-control-sm" value="Ahmad Subarjo (Direktur)"></div>
-                            <div class="mb-2"><label class="small fw-bold">Kepada</label><input type="text" id="memoKepada" class="form-control form-control-sm" placeholder="Manajer Operasional"></div>
-                            <div class="mb-2"><label class="small fw-bold">Tanggal</label><input type="text" id="memoTanggal" class="form-control form-control-sm" value="03 Juni 2026"></div>
-                            <div class="mb-2"><label class="small fw-bold">Perihal</label><input type="text" id="memoPerihal" class="form-control form-control-sm" placeholder="Tugas Luar Kota"></div>
-                            <div class="mb-3"><label class="small fw-bold">Isi Instruksi</label><textarea id="memoIsi" class="form-control form-control-sm" rows="6" placeholder="Tulis instruksi disini..."></textarea></div>
-                            <button onclick="downloadMemoPDF()" class="btn btn-info btn-sm text-white fw-bold w-100"><i class="fa-solid fa-file-pdf me-1"></i>Download PDF</button>
+                            <div id="boxChat" class="chat-box mb-3">
+                                <div class="text-center text-muted p-4">
+                                    <i class="fas fa-comments fa-3x mb-3 d-block"></i>
+                                    Selamat datang di grup chat! Kirim pesan pertama...
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="inputPesanChat" placeholder="Ketik pesan grup disini..." onkeypress="if(event.key==='Enter') kirimChatGrup()">
+                                <button class="btn btn-gradient" onclick="kirimChatGrup()">
+                                    <i class="fas fa-paper-plane"></i> Kirim
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-lg-7 col-md-6">
-                    <div class="card shadow-sm p-4 bg-white border-0" style="border-top:4px solid #0dcaf0;min-height:430px">
-                        <div class="text-center mb-2"><h5 class="fw-bold">MEMORANDUM</h5><hr class="my-2"></div>
-                        <div class="row small mb-2">
-                            <div class="col-3 fw-bold">DARI</div><div class="col-9" id="vDari">: Ahmad Subarjo (Direktur)</div>
-                            <div class="col-3 fw-bold">KEPADA</div><div class="col-9" id="vKepada">: -</div>
-                            <div class="col-3 fw-bold">TANGGAL</div><div class="col-9" id="vTanggal">: 03 Juni 2026</div>
-                            <div class="col-3 fw-bold">PERIHAL</div><div class="col-9" id="vPerihal">: -</div>
-                        </div>
-                        <hr>
-                        <p id="vIsi" style="white-space:pre-line" class="text-muted small">Ketik isi memo di sebelah kiri...</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="tab-absen" class="tab-konten d-none">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                    <span><i class="fa-solid fa-users-gear me-2"></i>Manajemen Data Karyawan</span>
-                    <button class="btn btn-sm btn-outline-light" onclick="seedKaryawanDefault()"><i class="fa-solid fa-bolt me-1"></i>Seed Default</button>
+        <!-- TAB ABSENSI -->
+        <div id="tab-absensi" class="tab-konten d-none">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-fingerprint"></i> Absen Hari Ini
+                        </div>
+                        <div class="card-body text-center">
+                            <div id="statusAbsenHariIni" class="mb-3">
+                                <span class="badge bg-secondary">Belum Absen</span>
+                            </div>
+                            <button class="btn btn-success btn-lg w-100 mb-2" onclick="absenMasuk()">
+                                <i class="fas fa-sign-in-alt"></i> Absen Masuk
+                            </button>
+                            <button class="btn btn-danger btn-lg w-100" onclick="absenPulang()">
+                                <i class="fas fa-sign-out-alt"></i> Absen Pulang
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-history"></i> Riwayat Absensi Saya
+                        </div>
+                        <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                            <div id="riwayatAbsensiSaya">
+                                <div class="text-center text-muted">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-chart-bar"></i> Rekap Absensi Semua Karyawan</span>
+                    <div>
+                        <button class="btn btn-excel btn-sm me-2" onclick="exportAbsensiExcel()">
+                            <i class="fas fa-file-excel"></i> Export Excel
+                        </button>
+                        <button class="btn btn-pdf btn-sm" onclick="exportAbsensiPDF()">
+                            <i class="fas fa-file-pdf"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body table-responsive">
+                    <table class="table table-bordered" id="tabelRekapAbsensi">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>No</th><th>Nama Karyawan</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelRekapAbsensiBody">
+                            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB KELOLA KARYAWAN (Admin Only) -->
+        <div id="tab-karyawan" class="tab-konten d-none">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-user-plus"></i> Tambah Karyawan Baru
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="input-group input-group-sm">
-                                <input type="text" id="inputNamaKaryawanBaru" class="form-control" placeholder="Nama karyawan baru">
-                                <button onclick="tambahKaryawanBaru()" class="btn btn-success btn-sm"><i class="fa-solid fa-plus"></i> Tambah</button>
-                            </div>
-                        </div>
+                    <div class="row">
                         <div class="col-md-8">
-                            <div class="table-responsive karyawan-table-container">
-                                <table class="table table-sm table-bordered m-0" style="font-size:12px">
-                                    <thead class="table-secondary"><tr><th>#</th><th>Nama Karyawan</th><th>Status</th><th>Aksi</th></tr></thead>
-                                    <tbody id="tabelManajemenKaryawan"></tbody>
-                                </table>
+                            <input type="text" class="form-control" id="inputNamaKaryawanBaru" placeholder="Nama lengkap karyawan">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-gradient w-100" onclick="tambahKaryawanBaru()">
+                                <i class="fas fa-plus"></i> Tambah & Generate Akun
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-danger btn-sm" onclick="hapusSemuaKaryawan()">
+                            <i class="fas fa-trash-alt"></i> HAPUS SEMUA KARYAWAN
+                        </button>
+                        <small class="text-muted ms-2">* Username & password akan digenerate otomatis</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <i class="fas fa-list"></i> Daftar Semua Karyawan
+                </div>
+                <div class="card-body table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>No</th><th>Nama & Login</th><th>Status</th><th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelManajemenKaryawan">
+                            <tr><td colspan="4" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB AGENDA SURAT (Admin Only) -->
+        <div id="tab-agenda" class="tab-konten d-none">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-plus"></i> Tambah Agenda Surat
+                </div>
+                <div class="card-body">
+                    <form id="formAgenda" onsubmit="tambahAgenda(event)">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label>Tanggal</label>
+                                <input type="date" id="agendaTanggal" class="form-control" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label>No. Agenda</label>
+                                <input type="text" id="agendaNo" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Jenis Surat</label>
+                                <select id="agendaJenis" class="form-control" required>
+                                    <option value="Masuk">Masuk</option>
+                                    <option value="Keluar">Keluar</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>No. Surat</label>
+                                <input type="text" id="agendaNoSurat" class="form-control" required>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-body filter-bar">
-                    <div class="row g-2 align-items-end">
-                        <div class="col-md-2">
-                            <label class="small fw-bold">Bulan</label>
-                            <select id="setBulan" class="form-select form-select-sm">
-                                <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option><option value="3">April</option><option value="4">Mei</option><option value="5" selected>Juni</option><option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option><option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="small fw-bold">Tahun</label>
-                            <input type="number" id="setTahun" class="form-control form-control-sm" value="2026">
-                        </div>
-                        <div class="col-md-3">
-                            <button onclick="generateKalenderRitel()" class="btn btn-primary btn-sm w-100"><i class="fa-solid fa-calendar-alt"></i> Muat Kalender Absen</button>
-                        </div>
-                        <div class="col-md-5">
-                            <div class="d-flex gap-2">
-                                <button onclick="exportToExcel()" class="btn btn-sm btn-success flex-grow-1"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
-                                <button onclick="exportToPDF()" class="btn btn-sm btn-danger flex-grow-1"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
-                                <button onclick="backupSemuaJSON()" class="btn btn-sm btn-secondary flex-grow-1"><i class="fa-solid fa-database"></i> Backup JSON</button>
+                        <div class="row mt-2">
+                            <div class="col-md-4">
+                                <label>Pengirim/Tujuan</label>
+                                <input type="text" id="agendaKontak" class="form-control" placeholder="Pengirim / Tujuan" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Perihal</label>
+                                <input type="text" id="agendaPerihal" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Keterangan</label>
+                                <input type="text" id="agendaKeterangan" class="form-control" placeholder="Disposisi dll">
                             </div>
                         </div>
-                    </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="fas fa-save"></i> Simpan Agenda
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-success text-white fw-bold"><i class="fa-regular fa-calendar me-2"></i>Input Absensi Harian</div>
-                <div class="card-body p-0">
-                    <div class="absen-scroll-container">
-                        <table class="table table-bordered table-sm m-0 table-absen" style="min-width:800px">
-                            <thead class="table-dark">
-                                <tr><th style="width:120px">Tanggal</th><th style="width:80px">Hari</th><th style="min-width:400px">Daftar Karyawan & Status</th><th style="width:120px">Aksi Cepat</th></tr>
-                            </thead>
-                            <tbody id="tabelKalenderRitel"><tr><td colspan="4" class="text-center py-4 text-muted">Klik "Muat Kalender Absen" untuk memulai</td></tr></tbody>
-                        </table>
+            <div class="card mt-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-book"></i> Buku Agenda Surat</span>
+                    <div>
+                        <input type="text" id="searchAgenda" class="form-control form-control-sm" placeholder="Cari..." style="width: 200px;" onkeyup="filterAgenda()">
                     </div>
+                </div>
+                <div class="card-body table-responsive">
+                    <table class="table table-bordered table-hover" id="tabelAgenda">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>No</th><th>Tanggal</th><th>No.Agenda</th><th>Jenis</th><th>No.Surat</th><th>Pengirim/Tujuan</th><th>Perihal</th><th>Keterangan</th><th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelAgendaBody">
+                            <tr><td colspan="9" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
 
-            <div class="row g-3 mt-4">
-                <div class="col-xl-7">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
-                            <span><i class="fa-solid fa-chart-simple me-2"></i>Rekap Kehadiran Karyawan</span>
-                            <button class="btn btn-sm btn-outline-light" onclick="hapusSemuaAbsensi()"><i class="fa-solid fa-trash me-1"></i>Hapus Semua Absen</button>
+        <!-- TAB MEMO PDF (Admin Only) -->
+        <div id="tab-memo" class="tab-konten d-none">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-edit"></i> Buat Memo
                         </div>
-                        <div class="card-body p-0 table-responsive" style="max-height:350px">
-                            <table class="table table-sm table-striped text-center m-0" style="font-size:12px">
-                                <thead class="table-secondary"><tr><th>Nama</th><th>Hadir</th><th>Sakit</th><th>Izin</th><th>Alpha</th><th>Total</th><th>Aksi</th></tr></thead>
-                                <tbody id="tabelReportAbsen"><tr><td colspan="7" class="text-muted">-</td></tr></tbody>
-                            </table>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label>Dari</label>
+                                <input type="text" id="memoDari" class="form-control" placeholder="Nama pengirim">
+                            </div>
+                            <div class="mb-3">
+                                <label>Kepada</label>
+                                <input type="text" id="memoKepada" class="form-control" placeholder="Nama penerima">
+                            </div>
+                            <div class="mb-3">
+                                <label>Tanggal</label>
+                                <input type="date" id="memoTanggal" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label>Perihal</label>
+                                <input type="text" id="memoPerihal" class="form-control" placeholder="Perihal memo">
+                            </div>
+                            <div class="mb-3">
+                                <label>Isi Memo</label>
+                                <textarea id="memoIsi" class="form-control" rows="5" placeholder="Tulis isi memo disini..."></textarea>
+                            </div>
+                            <button class="btn btn-gradient w-100" onclick="downloadMemoPDF()">
+                                <i class="fas fa-download"></i> Download PDF
+                            </button>
                         </div>
                     </div>
                 </div>
-                <div class="col-xl-5">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-secondary text-white fw-bold"><i class="fa-solid fa-chart-bar me-2"></i>Grafik Statistik</div>
-                        <div class="card-body p-2"><div class="chart-container"><canvas id="chartAbsenRitel"></canvas></div></div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-eye"></i> Preview Memo
+                        </div>
+                        <div class="card-body">
+                            <div class="border p-3 bg-light">
+                                <h5 class="text-center">MEMORANDUM</h5>
+                                <hr>
+                                <p><strong>Dari</strong> <span id="vDari">: -</span></p>
+                                <p><strong>Kepada</strong> <span id="vKepada">: -</span></p>
+                                <p><strong>Tanggal</strong> <span id="vTanggal">: -</span></p>
+                                <p><strong>Perihal</strong> <span id="vPerihal">: -</span></p>
+                                <hr>
+                                <p><strong>Isi Memo:</strong></p>
+                                <p id="vIsi" class="text-justify">Ketik isi memo di sebelah kiri...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -238,111 +420,805 @@
     </div>
 </div>
 
-<div class="toast-notif" id="toastNotif" style="display:none;">
-    <div class="toast show" style="background:#28a745;color:white"><div class="toast-body" id="toastMessage">Data tersimpan!</div></div>
+<!-- Toast Notifikasi -->
+<div id="toastNotif" class="toast-notif">
+    <div class="toast show" role="alert">
+        <div class="toast-header bg-success text-white">
+            <strong class="me-auto"><i class="fas fa-bell"></i> Notifikasi</strong>
+            <button type="button" class="btn-close btn-close-white" onclick="this.closest('.toast-notif').style.display='none'"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+            Pesan notifikasi
+        </div>
+    </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getDatabase, ref, set, get, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyCKtNlMr5NLj8-dYFUHVHTd_-tTyGpQC4U",
-    authDomain: "upload-gambar-93b5d.firebaseapp.com",
-    databaseURL: "https://upload-gambar-93b5d-default-rtdb.firebaseio.com",
-    projectId: "upload-gambar-93b5d",
-    storageBucket: "upload-gambar-93b5d.firebasestorage.app",
-    messagingSenderId: "1023138864386",
-    appId: "1:1023138864386:web:79b78fa01d5f138226b61b"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyCKtNlMr5NLj8-dYFUHVHTd_-tTyGpQC4U",
+        authDomain: "upload-gambar-93b5d.firebaseapp.com",
+        databaseURL: "https://upload-gambar-93b5d-default-rtdb.firebaseio.com",
+        projectId: "upload-gambar-93b5d",
+        storageBucket: "upload-gambar-93b5d.firebasestorage.app",
+        messagingSenderId: "1023138864386",
+        appId: "1:1023138864386:web:79b78fa01d5f138226b61b"
+    };
 
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
 
-let daftarKaryawan = [];
-let dataAbsensi = {};
-let dataSurat = [];
-let chartInstance = null;
-let listenersReady = false;
-const DEFAULT_KARYAWAN = ["Budi Santoso", "Sinta Dewi", "Andi Wijaya", "Rina Marlina"];
+    // Variabel global
+    let daftarKaryawan = [];
+    let dataAgenda = [];
+    let dataChatGrup = [];
+    let onlineUsers = {};
+    let currentUser = null;
+    let currentUserNama = "";
+    let listenersReady = false;
 
-function showToast(msg) {
-    const toast = document.getElementById('toastNotif');
-    document.getElementById('toastMessage').innerText = msg;
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 2000);
-}
-
-function guardSession() {
-    if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') {
-        document.getElementById('screen-main').classList.add('d-none');
-        document.getElementById('screen-login').classList.remove('d-none');
-        throw new Error('SESSION_EXPIRED');
+    // ============ FUNGSI UTILITY ============
+    function showToast(msg) {
+        const toast = document.getElementById('toastNotif');
+        document.getElementById('toastMessage').innerText = msg;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
     }
-}
 
-function prosesLogin(e) {
-    e.preventDefault();
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value;
-    const alertEl = document.getElementById('login-alert');
-    alertEl.classList.add('d-none');
-    if (u === "adminenakkkk" && p === "toserba2026") {
-        sessionStorage.setItem('isAdminLoggedIn', 'true');
-        sessionStorage.setItem('adminUser', u);
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getTodayDate() {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    }
+
+    function formatTanggal(dateStr) {
+        if (!dateStr) return '-';
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateStr;
+    }
+
+    // ============ MANAJEMEN SESSION ============
+    function guardSession() {
+        const isAdmin = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const isKaryawan = sessionStorage.getItem('isKaryawanLoggedIn') === 'true';
+        
+        if (!isAdmin && !isKaryawan) {
+            document.getElementById('screen-main').classList.add('d-none');
+            document.getElementById('screen-login').classList.remove('d-none');
+            throw new Error('SESSION_EXPIRED');
+        }
+    }
+
+    function showMain() {
         document.getElementById('screen-login').classList.add('d-none');
         document.getElementById('screen-main').classList.remove('d-none');
-        initFirebaseListeners();
-    } else {
-        alertEl.classList.remove('d-none');
-        alertEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i> Username / Password salah!';
+        
+        const role = sessionStorage.getItem('role');
+        const isAdmin = (role === 'admin');
+        
+        const adminTabs = ['adminOnlyTabs', 'adminOnlyTabs2', 'adminOnlyTabs3'];
+        adminTabs.forEach(tabId => {
+            const el = document.getElementById(tabId);
+            if (el) el.style.display = isAdmin ? 'block' : 'none';
+        });
+        
+        document.getElementById('currentUserDisplay').innerHTML = `<i class="fas fa-user-circle"></i> ${escapeHtml(currentUserNama || currentUser || 'User')}`;
     }
-}
 
-function initAuthView() {
-    if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
-        document.getElementById('screen-login').classList.add('d-none');
-        document.getElementById('screen-main').classList.remove('d-none');
-        initFirebaseListeners();
+    // ============ LOGIN & LOGOUT ============
+    window.prosesLogin = async function(e) {
+        e.preventDefault();
+        const u = document.getElementById('username').value.trim();
+        const p = document.getElementById('password').value;
+        const alertEl = document.getElementById('login-alert');
+        alertEl.classList.add('d-none');
+
+        if (u === "adminenakkkk" && p === "toserba2026") {
+            sessionStorage.setItem('isAdminLoggedIn', 'true');
+            sessionStorage.setItem('isKaryawanLoggedIn', 'false');
+            sessionStorage.setItem('role', 'admin');
+            sessionStorage.setItem('currentUser', u);
+            currentUser = u;
+            currentUserNama = "Admin";
+            showMain();
+            initFirebaseListeners();
+            await set(ref(database, `online/${u}`), true);
+            showToast('Selamat datang Admin!');
+            return;
+        }
+
+        try {
+            const snap = await get(ref(database, 'karyawan'));
+            const data = snap.val() || {};
+            const foundEntry = Object.entries(data).find(([id, val]) =>
+                val.username === u && val.password === p && val.status === 'Aktif'
+            );
+
+            if (foundEntry) {
+                const [karyawanId, karyawanData] = foundEntry;
+                
+                sessionStorage.setItem('isKaryawanLoggedIn', 'true');
+                sessionStorage.setItem('isAdminLoggedIn', 'false');
+                sessionStorage.setItem('role', 'karyawan');
+                sessionStorage.setItem('currentUser', u);
+                sessionStorage.setItem('currentKaryawanId', karyawanId);
+                currentUser = u;
+                currentUserNama = karyawanData.nama;
+                
+                showMain();
+                initFirebaseListeners();
+                await set(ref(database, `online/${u}`), true);
+                
+                setTimeout(() => {
+                    kirimPesanWelcome();
+                }, 1000);
+                
+                showToast(`Selamat datang ${karyawanData.nama}!`);
+            } else {
+                alertEl.classList.remove('d-none');
+                alertEl.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Username / Password salah!';
+            }
+        } catch (err) {
+            console.error(err);
+            alertEl.classList.remove('d-none');
+            alertEl.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Error koneksi database!';
+        }
+    };
+
+    async function kirimPesanWelcome() {
+        const welcomeMsg = `🎉 Selamat datang ${currentUserNama} bergabung di grup chat! 🎉`;
+        const newRef = push(ref(database, 'chatGrup'));
+        await set(newRef, {
+            from: "System",
+            fromName: "System",
+            pesan: welcomeMsg,
+            waktu: Date.now(),
+            type: "system"
+        });
     }
-}
 
-window.prosesLogin = prosesLogin;
-window.prosesLogout = function(){ sessionStorage.removeItem('isAdminLoggedIn'); sessionStorage.removeItem('adminUser'); location.reload(); };
-window.bukaTab = function(e,n){ guardSession(); document.querySelectorAll('.tab-konten').forEach(el => el.classList.add('d-none')); document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + n).classList.remove('d-none'); if (e && e.currentTarget) e.currentTarget.classList.add('active'); };
-window.tambahSurat = async function(e){ guardSession(); e.preventDefault(); const newRef = push(ref(database, 'surat')); await set(newRef, { jenis: document.getElementById('jenisSurat').value, noSurat: document.getElementById('noSurat').value, kontak: document.getElementById('kontakSurat').value, perihal: document.getElementById('perihalSurat').value, createdAt: Date.now() }); document.getElementById('formSurat').reset(); showToast('Surat berhasil ditambahkan!'); };
-window.hapusSurat = async function(id){ guardSession(); if (!confirm('Hapus surat ini?')) return; await remove(ref(database, `surat/${id}`)); showToast('Surat dihapus.'); };
-window.downloadMemoPDF = function(){ guardSession(); const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.text('MEMORANDUM', 105, 20, { align: 'center' }); doc.text(`DARI: ${document.getElementById('memoDari').value || '-'}`, 20, 40); doc.text(`KEPADA: ${document.getElementById('memoKepada').value || '-'}`, 20, 50); doc.text(`TANGGAL: ${document.getElementById('memoTanggal').value || '-'}`, 20, 60); doc.text(`PERIHAL: ${document.getElementById('memoPerihal').value || '-'}`, 20, 70); doc.text(doc.splitTextToSize(document.getElementById('memoIsi').value || '-', 170), 20, 85); doc.save('Memo_Toserba.pdf'); };
-window.tambahKaryawanBaru = async function(){ guardSession(); const nama = document.getElementById('inputNamaKaryawanBaru').value.trim(); if (!nama) return showToast('Nama tidak boleh kosong!'); if (daftarKaryawan.some(k => k.nama === nama)) return showToast('Nama sudah ada!'); const newRef = push(ref(database, 'karyawan')); await set(newRef, { nama, status: 'Aktif', createdAt: Date.now() }); document.getElementById('inputNamaKaryawanBaru').value = ''; showToast(`Karyawan ${nama} ditambahkan!`); };
-window.seedKaryawanDefault = async function(){ guardSession(); const snap = await get(ref(database, 'karyawan')); const data = snap.val(); if (data && Object.keys(data).length > 0) return showToast('Karyawan sudah ada, seed dibatalkan.'); for (const nama of DEFAULT_KARYAWAN) { const newRef = push(ref(database, 'karyawan')); await set(newRef, { nama, status: 'Aktif', createdAt: Date.now() }); } showToast('Seed karyawan default berhasil.'); };
-window.hapusKaryawan = async function(id,nama){ guardSession(); if (!confirm(`Hapus permanen karyawan "${nama}"?`)) return; await remove(ref(database, `karyawan/${id}`)); showToast(`Karyawan ${nama} telah dihapus!`); };
-window.resignKaryawan = async function(id,nama){ guardSession(); if (!confirm(`Resign karyawan ${nama}?`)) return; await update(ref(database, `karyawan/${id}`), { status: 'Resign' }); showToast(`${nama} status Resign`); };
-window.aktifkanKaryawan = async function(id,nama){ guardSession(); await update(ref(database, `karyawan/${id}`), { status: 'Aktif' }); showToast(`${nama} diaktifkan kembali`); };
-window.hapusRekapKaryawan = async function(nama){ guardSession(); if (!confirm(`Hapus semua data absensi milik ${nama}?`)) return; const snap = await get(ref(database, 'absensi')); const absensiData = snap.val() || {}; for (const key of Object.keys(absensiData)) { if (key.includes(`_${nama}`)) await remove(ref(database, `absensi/${key}`)); } showToast(`Absensi ${nama} dihapus.`); };
-window.hapusSemuaAbsensi = async function(){ guardSession(); if (!confirm('Hapus semua data absensi?')) return; await remove(ref(database, 'absensi')); showToast('Semua absensi dihapus.'); };
-window.ubahStatus = async function(tanggal,karyawan,statusBaru){ guardSession(); await set(ref(database, `absensi/${tanggal}_${karyawan}`), { status: statusBaru }); showToast(`${karyawan}: ${statusBaru}`); };
-window.setSemuaHari = async function(tanggal,status){ guardSession(); for (const k of daftarKaryawan.filter(x => x.status === 'Aktif')) { await set(ref(database, `absensi/${tanggal}_${k.nama}`), { status }); } showToast(`Semua karyawan tanggal ${tanggal} status = ${status}`); };
-window.backupSemuaJSON = function(){ guardSession(); const blob = new Blob([JSON.stringify({ surat: dataSurat, karyawan: daftarKaryawan, absensi: dataAbsensi, exportedAt: new Date().toISOString() }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup-toserba-${Date.now()}.json`; a.click(); };
-window.backupSuratJSON = function(){ guardSession(); const blob = new Blob([JSON.stringify(dataSurat, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `surat-toserba-${Date.now()}.json`; a.click(); };
-window.exportToExcel = function(){ guardSession(); const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet([['Nama Karyawan','Hadir','Sakit','Izin','Alpha','Total Tidak Hadir']]); XLSX.utils.book_append_sheet(wb, ws, 'Laporan Absensi'); XLSX.writeFile(wb, 'Laporan_Absensi_Toserba.xlsx'); };
-window.exportToPDF = function(){ guardSession(); const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'landscape' }); doc.text('LAPORAN KEHADIRAN KARYAWAN TOSERBA ENAK', 14, 15); doc.save('Laporan_Absensi_Toserba.pdf'); };
+    window.prosesLogout = async function() {
+        const user = sessionStorage.getItem('currentUser');
+        
+        if (user) {
+            await set(ref(database, `online/${user}`), false);
+            
+            if (currentUserNama && currentUserNama !== "Admin") {
+                const leaveMsg = `👋 ${currentUserNama} telah meninggalkan grup`;
+                const newRef = push(ref(database, 'chatGrup'));
+                await set(newRef, {
+                    from: "System",
+                    fromName: "System",
+                    pesan: leaveMsg,
+                    waktu: Date.now(),
+                    type: "system"
+                });
+            }
+        }
+        
+        sessionStorage.clear();
+        currentUser = null;
+        location.reload();
+    };
 
-function initFirebaseListeners() {
-    if (listenersReady) return;
-    listenersReady = true;
-    onValue(ref(database, 'surat'), snap => { dataSurat = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : []; });
-    onValue(ref(database, 'karyawan'), snap => { daftarKaryawan = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, nama: val.nama, status: val.status || 'Aktif' })) : []; if (daftarKaryawan.length === 0) seedKaryawanDefault(); });
-    onValue(ref(database, 'absensi'), snap => { dataAbsensi = snap.val() || {}; });
-}
+    // ============ GRUP CHAT ============
+    function updateActiveUsersList() {
+        const container = document.getElementById('activeUsersList');
+        if (!container) return;
+        
+        const activeUsers = Object.entries(onlineUsers)
+            .filter(([user, isOnline]) => isOnline === true)
+            .map(([user]) => user);
+        
+        const onlineCount = activeUsers.length;
+        document.getElementById('totalOnlineBadge').innerHTML = `${onlineCount} Online`;
+        document.getElementById('statOnlineNow').innerHTML = onlineCount;
+        
+        if (activeUsers.length === 0) {
+            container.innerHTML = '<small class="text-muted">Tidak ada user online</small>';
+            return;
+        }
+        
+        container.innerHTML = activeUsers.map(user => {
+            const karyawan = daftarKaryawan.find(k => k.username === user);
+            const namaTampil = karyawan ? karyawan.nama : user;
+            const isAdmin = user === 'adminenakkkk';
+            return `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                    <span>
+                        <span class="online-indicator online"></span>
+                        ${escapeHtml(namaTampil)} ${isAdmin ? '<span class="badge bg-danger">Admin</span>' : ''}
+                    </span>
+                    <small class="text-success"><i class="fas fa-circle fa-xs"></i> Online</small>
+                </div>
+            `;
+        }).join('');
+    }
 
-document.getElementById('memoDari').addEventListener('input', function(){ document.getElementById('vDari').innerText = ': ' + (this.value || '-'); });
-document.getElementById('memoKepada').addEventListener('input', function(){ document.getElementById('vKepada').innerText = ': ' + (this.value || '-'); });
-document.getElementById('memoTanggal').addEventListener('input', function(){ document.getElementById('vTanggal').innerText = ': ' + (this.value || '-'); });
-document.getElementById('memoPerihal').addEventListener('input', function(){ document.getElementById('vPerihal').innerText = ': ' + (this.value || '-'); });
-document.getElementById('memoIsi').addEventListener('input', function(){ document.getElementById('vIsi').innerText = this.value || 'Ketik isi memo di sebelah kiri...'; });
+    function loadChatGrup() {
+        const box = document.getElementById('boxChat');
+        if (!box) return;
 
-initAuthView();
-document.getElementById('login-alert').classList.add('d-none');
+        if (dataChatGrup.length === 0) {
+            box.innerHTML = '<div class="text-center text-muted p-4">Belum ada pesan. Mulai chat grup!</div>';
+            return;
+        }
+
+        box.innerHTML = dataChatGrup.sort((a, b) => (a.waktu || 0) - (b.waktu || 0)).map(msg => {
+            const time = msg.waktu ? new Date(msg.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+            const isSystem = msg.type === 'system';
+            const isOwn = msg.from === currentUser;
+            
+            if (isSystem) {
+                return `
+                    <div class="text-center my-2">
+                        <small class="bg-secondary text-white px-3 py-1 rounded-pill" style="font-size: 11px;">
+                            <i class="fas fa-info-circle"></i> ${escapeHtml(msg.pesan)}
+                        </small>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="mb-3 ${isOwn ? 'text-end' : 'text-start'}">
+                    <div class="d-inline-block p-2 rounded shadow-sm message-bubble ${isOwn ? 'bg-primary text-white' : 'bg-white border'}" 
+                         style="max-width: 75%;">
+                        <small class="d-block ${isOwn ? 'text-white-50' : 'text-muted'} mb-1">
+                            <b>${isOwn ? 'Anda' : escapeHtml(msg.fromName || msg.from)}</b>
+                        </small>
+                        <div class="mt-1">${escapeHtml(msg.pesan)}</div>
+                        <small class="d-block ${isOwn ? 'text-white-50' : 'text-muted'} mt-1" style="font-size: 10px;">${time}</small>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        box.scrollTop = box.scrollHeight;
+    }
+
+    window.kirimChatGrup = async function() {
+        if (!currentUser) {
+            showToast('Anda belum login!');
+            return;
+        }
+        
+        const pesanInput = document.getElementById('inputPesanChat');
+        const pesan = pesanInput.value.trim();
+        
+        if (!pesan) {
+            showToast('Pesan tidak boleh kosong');
+            return;
+        }
+
+        try {
+            const newRef = push(ref(database, 'chatGrup'));
+            await set(newRef, {
+                from: currentUser,
+                fromName: currentUserNama || currentUser,
+                pesan: pesan,
+                waktu: Date.now(),
+                type: "message"
+            });
+
+            pesanInput.value = '';
+            hitungPesanHariIni();
+        } catch (err) {
+            console.error(err);
+            showToast('Gagal mengirim pesan');
+        }
+    };
+
+    function hitungPesanHariIni() {
+        const today = new Date().toDateString();
+        const todayMsgs = dataChatGrup.filter(msg => {
+            const msgDate = msg.waktu ? new Date(msg.waktu).toDateString() : '';
+            return msgDate === today && msg.type !== 'system';
+        });
+        document.getElementById('statPesanHariIni').innerHTML = todayMsgs.length;
+    }
+
+    // ============ ABSENSI ============
+    window.absenMasuk = async function() {
+        if (!currentUser) return showToast('Login dulu bro!');
+        
+        const today = getTodayDate();
+        const absenRef = ref(database, `absensi/${currentUser}/${today}`);
+        const snap = await get(absenRef);
+        
+        if (snap.exists() && snap.val().masuk) {
+            showToast('⚠️ Kamu sudah absen masuk hari ini!');
+            return;
+        }
+        
+        const waktu = new Date().toLocaleTimeString('id-ID');
+        await set(absenRef, {
+            masuk: waktu,
+            tanggal: today,
+            nama: currentUserNama,
+            username: currentUser,
+            status: 'Hadir'
+        });
+        
+        showToast(`✅ Absen masuk berhasil jam ${waktu}`);
+        loadRiwayatAbsensiSaya();
+        
+        const notifMsg = `📋 ${currentUserNama} telah absen masuk jam ${waktu}`;
+        const newRef = push(ref(database, 'chatGrup'));
+        await set(newRef, {
+            from: "System",
+            fromName: "System",
+            pesan: notifMsg,
+            waktu: Date.now(),
+            type: "system"
+        });
+    };
+    
+    window.absenPulang = async function() {
+        if (!currentUser) return showToast('Login dulu bro!');
+        
+        const today = getTodayDate();
+        const absenRef = ref(database, `absensi/${currentUser}/${today}`);
+        const snap = await get(absenRef);
+        
+        if (!snap.exists()) {
+            showToast('❌ Kamu belum absen masuk hari ini!');
+            return;
+        }
+        
+        if (snap.val().pulang) {
+            showToast('⚠️ Kamu sudah absen pulang hari ini!');
+            return;
+        }
+        
+        const waktu = new Date().toLocaleTimeString('id-ID');
+        await update(absenRef, { pulang: waktu });
+        
+        showToast(`✅ Absen pulang berhasil jam ${waktu}`);
+        loadRiwayatAbsensiSaya();
+    };
+    
+    async function loadRiwayatAbsensiSaya() {
+        const container = document.getElementById('riwayatAbsensiSaya');
+        if (!container) return;
+        
+        const snap = await get(ref(database, `absensi/${currentUser}`));
+        const data = snap.val() || {};
+        
+        const entries = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
+        
+        if (entries.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted">Belum ada riwayat absensi</div>';
+            return;
+        }
+        
+        container.innerHTML = entries.map(([tgl, val]) => `
+            <div class="border-bottom p-2">
+                <div class="d-flex justify-content-between">
+                    <strong>${formatTanggal(tgl)}</strong>
+                    <span class="badge ${val.masuk ? 'bg-success' : 'bg-danger'}">
+                        ${val.status || 'Hadir'}
+                    </span>
+                </div>
+                <div class="small text-muted">
+                    <i class="fas fa-sign-in-alt"></i> Masuk: ${val.masuk || '-'} &nbsp;
+                    <i class="fas fa-sign-out-alt"></i> Pulang: ${val.pulang || '-'}
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    async function loadRekapAbsensi() {
+        const tbody = document.getElementById('tabelRekapAbsensiBody');
+        if (!tbody) return;
+        
+        const karyawanAktif = daftarKaryawan.filter(k => k.status === 'Aktif');
+        
+        if (karyawanAktif.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Belum ada data karyawan</td></tr>';
+            return;
+        }
+        
+        const rekapData = [];
+        
+        for (const karyawan of karyawanAktif) {
+            const snap = await get(ref(database, `absensi/${karyawan.username}`));
+            const absensi = snap.val() || {};
+            
+            let hadir = 0;
+            
+            Object.values(absensi).forEach(absen => {
+                if (absen.masuk) hadir++;
+            });
+            
+            rekapData.push({
+                nama: karyawan.nama,
+                hadir: hadir
+            });
+        }
+        
+        tbody.innerHTML = rekapData.map((r, i) => `
+            <tr>
+                <td>${i+1}</td>
+                <td>${escapeHtml(r.nama)}</td>
+                <td class="text-success fw-bold">${r.hadir}</td>
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+        `).join('');
+    }
+
+    // EXPORT ABSENSI
+    window.exportAbsensiExcel = async function() {
+        const karyawanAktif = daftarKaryawan.filter(k => k.status === 'Aktif');
+        const data = [];
+        
+        for (const karyawan of karyawanAktif) {
+            const snap = await get(ref(database, `absensi/${karyawan.username}`));
+            const absensi = snap.val() || {};
+            
+            let hadir = 0;
+            Object.values(absensi).forEach(absen => {
+                if (absen.masuk) hadir++;
+            });
+            
+            data.push({
+                'Nama Karyawan': karyawan.nama,
+                'Username': karyawan.username,
+                'Total Hadir': hadir
+            });
+        }
+        
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Rekap Absensi');
+        XLSX.writeFile(wb, `Rekap_Absensi_${new Date().toLocaleDateString()}.xlsx`);
+        showToast('✅ Export Excel berhasil!');
+    };
+    
+    window.exportAbsensiPDF = async function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape');
+        
+        doc.setFontSize(16);
+        doc.text('LAPORAN REKAP ABSENSI KARYAWAN', 148, 15, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text(`Tanggal Cetak: ${new Date().toLocaleString()}`, 148, 22, { align: 'center' });
+        
+        const karyawanAktif = daftarKaryawan.filter(k => k.status === 'Aktif');
+        const data = [];
+        
+        for (const karyawan of karyawanAktif) {
+            const snap = await get(ref(database, `absensi/${karyawan.username}`));
+            const absensi = snap.val() || {};
+            
+            let hadir = 0;
+            Object.values(absensi).forEach(absen => {
+                if (absen.masuk) hadir++;
+            });
+            
+            data.push([karyawan.nama, karyawan.username, hadir]);
+        }
+        
+        doc.autoTable({
+            head: [['Nama Karyawan', 'Username', 'Total Hadir']],
+            body: data,
+            startY: 30,
+            theme: 'striped',
+            headStyles: { fillColor: [102, 126, 234] }
+        });
+        
+        doc.save(`Laporan_Absensi_${new Date().toLocaleDateString()}.pdf`);
+        showToast('✅ Export PDF berhasil!');
+    };
+
+    // ============ MANAJEMEN KARYAWAN ============
+    function renderKaryawan() {
+        const tbody = document.getElementById('tabelManajemenKaryawan');
+        if (!tbody) return;
+
+        if (daftarKaryawan.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Belum ada data karyawan</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = daftarKaryawan.map((k, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>
+                    <strong>${escapeHtml(k.nama)}</strong><br>
+                    <small class="text-muted">User: <code>${escapeHtml(k.username || '-')}</code></small><br>
+                    <small class="text-muted">Pass: <code>${escapeHtml(k.password || '-')}</code></small>
+                  </td>
+                <td>
+                    <span class="badge ${k.status === 'Aktif' ? 'bg-success' : 'bg-secondary'}">
+                        ${k.status || 'Aktif'}
+                    </span>
+                  </td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="hapusKaryawan('${k.id}','${escapeHtml(k.nama)}')">
+                        <i class="fas fa-trash"></i> Hapus
+                    </button>
+                  </td>
+            </tr>
+        `).join('');
+    }
+
+    window.tambahKaryawanBaru = async function() {
+        guardSession();
+        const nama = document.getElementById('inputNamaKaryawanBaru').value.trim();
+        if (!nama) return showToast('Nama tidak boleh kosong!');
+        if (daftarKaryawan.some(k => k.nama.toLowerCase() === nama.toLowerCase())) {
+            return showToast('Nama sudah ada!');
+        }
+
+        const base = nama.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6);
+        const nomor = Math.floor(Math.random() * 900 + 100);
+        const username = base + nomor;
+        const password = Math.random().toString(36).slice(-8);
+
+        const newRef = push(ref(database, 'karyawan'));
+        await set(newRef, {
+            nama: nama,
+            status: 'Aktif',
+            username: username,
+            password: password,
+            createdAt: Date.now()
+        });
+
+        document.getElementById('inputNamaKaryawanBaru').value = '';
+        showToast(`✅ Akun berhasil dibuat!\nUsername: ${username}\nPassword: ${password}`);
+    };
+    
+    window.hapusSemuaKaryawan = async function() {
+        guardSession();
+        if (!confirm('⚠️ PERINGATAN! Ini akan menghapus SEMUA data karyawan. Lanjutkan?')) return;
+        
+        showToast('⏳ Menghapus semua karyawan...');
+        
+        for (const karyawan of daftarKaryawan) {
+            await remove(ref(database, `karyawan/${karyawan.id}`));
+        }
+        
+        showToast('✅ Semua karyawan telah dihapus!');
+    };
+
+    window.hapusKaryawan = async function(id, nama) {
+        guardSession();
+        if (!confirm(`Hapus permanen karyawan "${nama}"?`)) return;
+        await remove(ref(database, `karyawan/${id}`));
+        showToast(`✅ Karyawan ${nama} telah dihapus!`);
+    };
+
+    // ============ AGENDA SURAT ============
+    function renderAgenda() {
+        const tbody = document.getElementById('tabelAgendaBody');
+        if (!tbody) return;
+        
+        if (dataAgenda.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">Belum ada data agenda</td></tr>';
+            return;
+        }
+        
+        const sortedAgenda = [...dataAgenda].sort((a,b) => b.createdAt - a.createdAt);
+        
+        tbody.innerHTML = sortedAgenda.map((item, i) => `
+            <tr>
+                <td>${i+1}</td>
+                <td>${formatTanggal(item.tanggal)}</td>
+                <td>${escapeHtml(item.noAgenda)}</td>
+                <td><span class="badge ${item.jenis === 'Masuk' ? 'bg-info' : 'bg-warning'}">${escapeHtml(item.jenis)}</span></td>
+                <td>${escapeHtml(item.noSurat)}</td>
+                <td>${escapeHtml(item.kontak)}</td>
+                <td>${escapeHtml(item.perihal)}</td>
+                <td>${escapeHtml(item.keterangan || '-')}</td>
+                <td>
+                    <button class="btn btn-sm btn-danger" onclick="hapusAgenda('${item.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                  </td>
+            </tr>
+        `).join('');
+    }
+    
+    window.tambahAgenda = async function(e) {
+        e.preventDefault();
+        guardSession();
+        
+        const newRef = push(ref(database, 'agenda'));
+        await set(newRef, {
+            tanggal: document.getElementById('agendaTanggal').value,
+            noAgenda: document.getElementById('agendaNo').value,
+            jenis: document.getElementById('agendaJenis').value,
+            noSurat: document.getElementById('agendaNoSurat').value,
+            kontak: document.getElementById('agendaKontak').value,
+            perihal: document.getElementById('agendaPerihal').value,
+            keterangan: document.getElementById('agendaKeterangan').value,
+            createdAt: Date.now()
+        });
+        
+        document.getElementById('formAgenda').reset();
+        document.getElementById('agendaTanggal').valueAsDate = new Date();
+        showToast('✅ Agenda surat berhasil ditambahkan!');
+    };
+    
+    window.hapusAgenda = async function(id) {
+        guardSession();
+        if (!confirm('Hapus agenda ini?')) return;
+        await remove(ref(database, `agenda/${id}`));
+        showToast('✅ Agenda dihapus.');
+    };
+    
+    window.filterAgenda = function() {
+        const search = document.getElementById('searchAgenda').value.toLowerCase();
+        const rows = document.querySelectorAll('#tabelAgendaBody tr');
+        
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(search) ? '' : 'none';
+        });
+    };
+
+    // ============ MEMO PDF ============
+    window.downloadMemoPDF = function() {
+        guardSession();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        doc.setFontSize(20);
+        doc.text('MEMORANDUM', 105, 20, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`Dari: ${document.getElementById('memoDari').value || '-'}`, 20, 45);
+        doc.text(`Kepada: ${document.getElementById('memoKepada').value || '-'}`, 20, 55);
+        doc.text(`Tanggal: ${document.getElementById('memoTanggal').value || '-'}`, 20, 65);
+        doc.text(`Perihal: ${document.getElementById('memoPerihal').value || '-'}`, 20, 75);
+        
+        const isiMemo = document.getElementById('memoIsi').value || '-';
+        const splitText = doc.splitTextToSize(isiMemo, 170);
+        doc.text(splitText, 20, 90);
+        
+        doc.save(`Memo_${Date.now()}.pdf`);
+        showToast('Memo berhasil diunduh!');
+    };
+
+    // ============ UPDATE STAT ============
+    function updateStat() {
+        const statTotal = document.getElementById('statTotalKaryawan');
+        if (statTotal) statTotal.innerHTML = daftarKaryawan.length;
+        hitungPesanHariIni();
+    }
+
+    // ============ TAB NAVIGATION ============
+    window.bukaTab = function(event, tabName) {
+        guardSession();
+        document.querySelectorAll('.tab-konten').forEach(el => el.classList.add('d-none'));
+        document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`tab-${tabName}`).classList.remove('d-none');
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add('active');
+        }
+        
+        if (tabName === 'agenda') renderAgenda();
+        if (tabName === 'karyawan') renderKaryawan();
+        if (tabName === 'absensi') {
+            loadRiwayatAbsensiSaya();
+            loadRekapAbsensi();
+        }
+    };
+
+    // ============ FIREBASE LISTENERS ============
+    function initFirebaseListeners() {
+        if (listenersReady) return;
+        listenersReady = true;
+
+        onValue(ref(database, 'agenda'), (snap) => {
+            dataAgenda = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
+            if (document.getElementById('tab-agenda') && !document.getElementById('tab-agenda').classList.contains('d-none')) {
+                renderAgenda();
+            }
+        });
+
+        onValue(ref(database, 'karyawan'), (snap) => {
+            daftarKaryawan = snap.val()
+                ? Object.entries(snap.val()).map(([id, val]) => ({
+                    id, nama: val.nama, status: val.status || 'Aktif',
+                    username: val.username || '', password: val.password || ''
+                }))
+                : [];
+            
+            renderKaryawan();
+            updateStat();
+            if (document.getElementById('tab-absensi') && !document.getElementById('tab-absensi').classList.contains('d-none')) {
+                loadRekapAbsensi();
+            }
+        });
+
+        onValue(ref(database, 'chatGrup'), (snap) => {
+            dataChatGrup = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
+            loadChatGrup();
+            hitungPesanHariIni();
+            
+            if (dataChatGrup.length > 0 && currentUser) {
+                const lastMsg = dataChatGrup[dataChatGrup.length - 1];
+                if (lastMsg && lastMsg.from !== currentUser && lastMsg.type !== 'system') {
+                    showToast(`💬 Pesan baru dari ${lastMsg.fromName || lastMsg.from}`);
+                }
+            }
+        });
+
+        onValue(ref(database, 'online'), (snap) => {
+            onlineUsers = snap.val() || {};
+            updateActiveUsersList();
+        });
+        
+        setInterval(async () => {
+            if (currentUser && (sessionStorage.getItem('isKaryawanLoggedIn') === 'true' || sessionStorage.getItem('isAdminLoggedIn') === 'true')) {
+                await set(ref(database, `online/${currentUser}`), true);
+            }
+        }, 30000);
+    }
+
+    // ============ INITIALIZATION ============
+    function init() {
+        // Preview memo
+        const memoFields = ['memoDari', 'memoKepada', 'memoTanggal', 'memoPerihal', 'memoIsi'];
+        memoFields.forEach(field => {
+            const el = document.getElementById(field);
+            if (el) {
+                el.addEventListener('input', function() {
+                    const previewId = 'v' + field.charAt(0).toUpperCase() + field.slice(1);
+                    const previewEl = document.getElementById(previewId);
+                    if (previewEl) previewEl.innerText = ': ' + (this.value || '-');
+                });
+            }
+        });
+        
+        // Set default date untuk agenda
+        const agendaTanggal = document.getElementById('agendaTanggal');
+        if (agendaTanggal) {
+            agendaTanggal.valueAsDate = new Date();
+        }
+        
+        const isAdmin = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const isKaryawan = sessionStorage.getItem('isKaryawanLoggedIn') === 'true';
+        
+        if (isAdmin || isKaryawan) {
+            currentUser = sessionStorage.getItem('currentUser');
+            
+            if (isAdmin) {
+                currentUserNama = "Admin";
+            } else {
+                const karyawan = daftarKaryawan.find(k => k.username === currentUser);
+                currentUserNama = karyawan ? karyawan.nama : currentUser;
+            }
+            
+            showMain();
+            initFirebaseListeners();
+            
+            if ((isKaryawan || isAdmin) && currentUser) {
+                set(ref(database, `online/${currentUser}`), true);
+            }
+        } else {
+            document.getElementById('screen-login').classList.remove('d-none');
+            document.getElementById('screen-main').classList.add('d-none');
+        }
+    }
+
+    // START
+    init();
 </script>
+
 </body>
 </html>
