@@ -7,10 +7,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
         .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         .card { border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; margin-bottom: 20px; }
         .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px 15px 0 0; padding: 15px 20px; font-weight: bold; }
@@ -21,18 +21,15 @@
         .login-card { max-width: 450px; margin: 100px auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
         .online-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
         .online { background-color: #28a745; box-shadow: 0 0 5px #28a745; animation: pulse 1.5s infinite; }
-        .offline { background-color: #6c757d; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .toast-notif { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: none; }
         .message-bubble { max-width: 70%; word-wrap: break-word; }
         .bg-gradient-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .table-responsive { overflow-x: auto; }
         .btn-excel { background: #28a745; color: white; }
         .btn-excel:hover { background: #218838; color: white; }
         .btn-pdf { background: #dc3545; color: white; }
         .btn-pdf:hover { background: #c82333; color: white; }
-        .agenda-card { cursor: pointer; transition: all 0.3s; }
-        .agenda-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .table-responsive { overflow-x: auto; }
     </style>
 </head>
 <body>
@@ -73,7 +70,6 @@
 
     <!-- LAYAR UTAMA -->
     <div id="screen-main" class="d-none">
-        <!-- Navbar -->
         <nav class="navbar navbar-dark bg-gradient-custom mb-4 rounded-3">
             <div class="container-fluid">
                 <span class="navbar-brand text-white">
@@ -90,52 +86,46 @@
             </div>
         </nav>
 
-        <!-- Tab Menu -->
-        <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active btn-tab" data-tab="chat" onclick="bukaTab(event, 'chat')">
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <button class="nav-link active btn-tab" onclick="bukaTab(event, 'chat')">
                     <i class="fas fa-comments"></i> Grup Chat
                 </button>
             </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link btn-tab" data-tab="absensi" onclick="bukaTab(event, 'absensi')">
+            <li class="nav-item">
+                <button class="nav-link btn-tab" onclick="bukaTab(event, 'absensi')">
                     <i class="fas fa-calendar-check"></i> Absensi
                 </button>
             </li>
-            <li class="nav-item" role="presentation" id="adminOnlyTabs" style="display: none;">
-                <button class="nav-link btn-tab" data-tab="karyawan" onclick="bukaTab(event, 'karyawan')">
+            <li class="nav-item" id="adminOnlyTabs" style="display: none;">
+                <button class="nav-link btn-tab" onclick="bukaTab(event, 'karyawan')">
                     <i class="fas fa-users"></i> Kelola Karyawan
                 </button>
             </li>
-            <li class="nav-item" role="presentation" id="adminOnlyTabs2" style="display: none;">
-                <button class="nav-link btn-tab" data-tab="agenda" onclick="bukaTab(event, 'agenda')">
+            <li class="nav-item" id="adminOnlyTabs2" style="display: none;">
+                <button class="nav-link btn-tab" onclick="bukaTab(event, 'agenda')">
                     <i class="fas fa-book"></i> Agenda Surat
                 </button>
             </li>
-            <li class="nav-item" role="presentation" id="adminOnlyTabs3" style="display: none;">
-                <button class="nav-link btn-tab" data-tab="memo" onclick="bukaTab(event, 'memo')">
+            <li class="nav-item" id="adminOnlyTabs3" style="display: none;">
+                <button class="nav-link btn-tab" onclick="bukaTab(event, 'memo')">
                     <i class="fas fa-file-alt"></i> Memo PDF
                 </button>
             </li>
         </ul>
 
-        <!-- TAB GRUP CHAT -->
+        <!-- TAB CHAT -->
         <div id="tab-chat" class="tab-konten">
             <div class="row">
                 <div class="col-md-3">
                     <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-circle text-success"></i> Online Now
-                        </div>
+                        <div class="card-header"><i class="fas fa-circle text-success"></i> Online Now</div>
                         <div class="card-body" id="activeUsersList" style="max-height: 300px; overflow-y: auto;">
                             <small class="text-muted">Loading...</small>
                         </div>
                     </div>
-                    
                     <div class="card mt-3">
-                        <div class="card-header bg-info">
-                            <i class="fas fa-chart-line"></i> Statistik
-                        </div>
+                        <div class="card-header bg-info"><i class="fas fa-chart-line"></i> Statistik</div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Total Karyawan:</span>
@@ -145,29 +135,21 @@
                                 <span>Online Sekarang:</span>
                                 <strong id="statOnlineNow">0</strong>
                             </div>
-                            <div class="d-flex justify-content-between">
-                                <span>Pesan Hari Ini:</span>
-                                <strong id="statPesanHariIni">0</strong>
-                            </div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-9">
                     <div class="card">
                         <div class="card-header">
-                            <i class="fas fa-comment-dots"></i> Grup Chat Semua Karyawan
+                            <i class="fas fa-comment-dots"></i> Grup Chat
                             <span class="badge bg-light text-dark ms-2" id="totalOnlineBadge">0 Online</span>
                         </div>
                         <div class="card-body">
                             <div id="boxChat" class="chat-box mb-3">
-                                <div class="text-center text-muted p-4">
-                                    <i class="fas fa-comments fa-3x mb-3 d-block"></i>
-                                    Selamat datang di grup chat! Kirim pesan pertama...
-                                </div>
+                                <div class="text-center text-muted p-4">Selamat datang di grup chat!</div>
                             </div>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="inputPesanChat" placeholder="Ketik pesan grup disini..." onkeypress="if(event.key==='Enter') kirimChatGrup()">
+                                <input type="text" class="form-control" id="inputPesanChat" placeholder="Ketik pesan..." onkeypress="if(event.key==='Enter') kirimChatGrup()">
                                 <button class="btn btn-gradient" onclick="kirimChatGrup()">
                                     <i class="fas fa-paper-plane"></i> Kirim
                                 </button>
@@ -183,9 +165,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-fingerprint"></i> Absen Hari Ini
-                        </div>
+                        <div class="card-header"><i class="fas fa-fingerprint"></i> Absen Hari Ini</div>
                         <div class="card-body text-center">
                             <div id="statusAbsenHariIni" class="mb-3">
                                 <span class="badge bg-secondary">Belum Absen</span>
@@ -199,21 +179,15 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-8">
                     <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-history"></i> Riwayat Absensi Saya
-                        </div>
+                        <div class="card-header"><i class="fas fa-history"></i> Riwayat Absensi Saya</div>
                         <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                            <div id="riwayatAbsensiSaya">
-                                <div class="text-center text-muted">Loading...</div>
-                            </div>
+                            <div id="riwayatAbsensiSaya" class="text-center text-muted">Loading...</div>
                         </div>
                     </div>
                 </div>
             </div>
-            
             <div class="card mt-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="fas fa-chart-bar"></i> Rekap Absensi Semua Karyawan</span>
@@ -227,11 +201,9 @@
                     </div>
                 </div>
                 <div class="card-body table-responsive">
-                    <table class="table table-bordered" id="tabelRekapAbsensi">
+                    <table class="table table-bordered">
                         <thead class="table-dark">
-                            <tr>
-                                <th>No</th><th>Nama Karyawan</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th>
-                            </tr>
+                            <tr><th>No</th><th>Nama Karyawan</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th></tr>
                         </thead>
                         <tbody id="tabelRekapAbsensiBody">
                             <tr><td colspan="6" class="text-center">Loading...</td></tr>
@@ -241,12 +213,10 @@
             </div>
         </div>
 
-        <!-- TAB KELOLA KARYAWAN (Admin Only) -->
+        <!-- TAB KARYAWAN -->
         <div id="tab-karyawan" class="tab-konten d-none">
             <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-user-plus"></i> Tambah Karyawan Baru
-                </div>
+                <div class="card-header"><i class="fas fa-user-plus"></i> Tambah Karyawan Baru</div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-8">
@@ -262,21 +232,15 @@
                         <button class="btn btn-danger btn-sm" onclick="hapusSemuaKaryawan()">
                             <i class="fas fa-trash-alt"></i> HAPUS SEMUA KARYAWAN
                         </button>
-                        <small class="text-muted ms-2">* Username & password akan digenerate otomatis</small>
                     </div>
                 </div>
             </div>
-
             <div class="card mt-3">
-                <div class="card-header">
-                    <i class="fas fa-list"></i> Daftar Semua Karyawan
-                </div>
+                <div class="card-header"><i class="fas fa-list"></i> Daftar Semua Karyawan</div>
                 <div class="card-body table-responsive">
                     <table class="table table-bordered">
                         <thead class="table-dark">
-                            <tr>
-                                <th>No</th><th>Nama & Login</th><th>Status</th><th>Aksi</th>
-                            </tr>
+                            <tr><th>No</th><th>Nama & Login</th><th>Status</th><th>Aksi</th></tr>
                         </thead>
                         <tbody id="tabelManajemenKaryawan">
                             <tr><td colspan="4" class="text-center">Loading...</td></tr>
@@ -286,12 +250,10 @@
             </div>
         </div>
 
-        <!-- TAB AGENDA SURAT (Admin Only) -->
+        <!-- TAB AGENDA -->
         <div id="tab-agenda" class="tab-konten d-none">
             <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-plus"></i> Tambah Agenda Surat
-                </div>
+                <div class="card-header"><i class="fas fa-plus"></i> Tambah Agenda Surat</div>
                 <div class="card-body">
                     <form id="formAgenda" onsubmit="tambahAgenda(event)">
                         <div class="row">
@@ -318,7 +280,7 @@
                         <div class="row mt-2">
                             <div class="col-md-4">
                                 <label>Pengirim/Tujuan</label>
-                                <input type="text" id="agendaKontak" class="form-control" placeholder="Pengirim / Tujuan" required>
+                                <input type="text" id="agendaKontak" class="form-control" required>
                             </div>
                             <div class="col-md-4">
                                 <label>Perihal</label>
@@ -326,31 +288,24 @@
                             </div>
                             <div class="col-md-4">
                                 <label>Keterangan</label>
-                                <input type="text" id="agendaKeterangan" class="form-control" placeholder="Disposisi dll">
+                                <input type="text" id="agendaKeterangan" class="form-control">
                             </div>
                         </div>
                         <div class="mt-3">
-                            <button type="submit" class="btn btn-gradient">
-                                <i class="fas fa-save"></i> Simpan Agenda
-                            </button>
+                            <button type="submit" class="btn btn-gradient">Simpan Agenda</button>
                         </div>
                     </form>
                 </div>
             </div>
-
             <div class="card mt-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-book"></i> Buku Agenda Surat</span>
-                    <div>
-                        <input type="text" id="searchAgenda" class="form-control form-control-sm" placeholder="Cari..." style="width: 200px;" onkeyup="filterAgenda()">
-                    </div>
+                <div class="card-header">
+                    <i class="fas fa-book"></i> Buku Agenda Surat
+                    <input type="text" id="searchAgenda" class="form-control form-control-sm mt-2" placeholder="Cari..." style="width: 200px;" onkeyup="filterAgenda()">
                 </div>
                 <div class="card-body table-responsive">
-                    <table class="table table-bordered table-hover" id="tabelAgenda">
+                    <table class="table table-bordered">
                         <thead class="table-dark">
-                            <tr>
-                                <th>No</th><th>Tanggal</th><th>No.Agenda</th><th>Jenis</th><th>No.Surat</th><th>Pengirim/Tujuan</th><th>Perihal</th><th>Keterangan</th><th>Aksi</th>
-                            </tr>
+                            <tr><th>No</th><th>Tanggal</th><th>No.Agenda</th><th>Jenis</th><th>No.Surat</th><th>Pengirim/Tujuan</th><th>Perihal</th><th>Keterangan</th><th>Aksi</th></tr>
                         </thead>
                         <tbody id="tabelAgendaBody">
                             <tr><td colspan="9" class="text-center">Loading...</td></tr>
@@ -360,57 +315,34 @@
             </div>
         </div>
 
-        <!-- TAB MEMO PDF (Admin Only) -->
+        <!-- TAB MEMO -->
         <div id="tab-memo" class="tab-konten d-none">
             <div class="row">
                 <div class="col-md-6">
                     <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-edit"></i> Buat Memo
-                        </div>
+                        <div class="card-header"><i class="fas fa-edit"></i> Buat Memo</div>
                         <div class="card-body">
-                            <div class="mb-3">
-                                <label>Dari</label>
-                                <input type="text" id="memoDari" class="form-control" placeholder="Nama pengirim">
-                            </div>
-                            <div class="mb-3">
-                                <label>Kepada</label>
-                                <input type="text" id="memoKepada" class="form-control" placeholder="Nama penerima">
-                            </div>
-                            <div class="mb-3">
-                                <label>Tanggal</label>
-                                <input type="date" id="memoTanggal" class="form-control">
-                            </div>
-                            <div class="mb-3">
-                                <label>Perihal</label>
-                                <input type="text" id="memoPerihal" class="form-control" placeholder="Perihal memo">
-                            </div>
-                            <div class="mb-3">
-                                <label>Isi Memo</label>
-                                <textarea id="memoIsi" class="form-control" rows="5" placeholder="Tulis isi memo disini..."></textarea>
-                            </div>
-                            <button class="btn btn-gradient w-100" onclick="downloadMemoPDF()">
-                                <i class="fas fa-download"></i> Download PDF
-                            </button>
+                            <div class="mb-3"><label>Dari</label><input type="text" id="memoDari" class="form-control"></div>
+                            <div class="mb-3"><label>Kepada</label><input type="text" id="memoKepada" class="form-control"></div>
+                            <div class="mb-3"><label>Tanggal</label><input type="date" id="memoTanggal" class="form-control"></div>
+                            <div class="mb-3"><label>Perihal</label><input type="text" id="memoPerihal" class="form-control"></div>
+                            <div class="mb-3"><label>Isi Memo</label><textarea id="memoIsi" class="form-control" rows="5"></textarea></div>
+                            <button class="btn btn-gradient w-100" onclick="downloadMemoPDF()">Download PDF</button>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-eye"></i> Preview Memo
-                        </div>
+                        <div class="card-header"><i class="fas fa-eye"></i> Preview Memo</div>
                         <div class="card-body">
                             <div class="border p-3 bg-light">
-                                <h5 class="text-center">MEMORANDUM</h5>
-                                <hr>
+                                <h5 class="text-center">MEMORANDUM</h5><hr>
                                 <p><strong>Dari</strong> <span id="vDari">: -</span></p>
                                 <p><strong>Kepada</strong> <span id="vKepada">: -</span></p>
                                 <p><strong>Tanggal</strong> <span id="vTanggal">: -</span></p>
-                                <p><strong>Perihal</strong> <span id="vPerihal">: -</span></p>
-                                <hr>
+                                <p><strong>Perihal</strong> <span id="vPerihal">: -</span></p><hr>
                                 <p><strong>Isi Memo:</strong></p>
-                                <p id="vIsi" class="text-justify">Ketik isi memo di sebelah kiri...</p>
+                                <p id="vIsi">-</p>
                             </div>
                         </div>
                     </div>
@@ -420,16 +352,13 @@
     </div>
 </div>
 
-<!-- Toast Notifikasi -->
 <div id="toastNotif" class="toast-notif">
-    <div class="toast show" role="alert">
+    <div class="toast show">
         <div class="toast-header bg-success text-white">
             <strong class="me-auto"><i class="fas fa-bell"></i> Notifikasi</strong>
             <button type="button" class="btn-close btn-close-white" onclick="this.closest('.toast-notif').style.display='none'"></button>
         </div>
-        <div class="toast-body" id="toastMessage">
-            Pesan notifikasi
-        </div>
+        <div class="toast-body" id="toastMessage"></div>
     </div>
 </div>
 
@@ -437,20 +366,21 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
     import { getDatabase, ref, set, get, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
+    // Firebase BARU dari lu
     const firebaseConfig = {
-        apiKey: "AIzaSyCKtNlMr5NLj8-dYFUHVHTd_-tTyGpQC4U",
-        authDomain: "upload-gambar-93b5d.firebaseapp.com",
-        databaseURL: "https://upload-gambar-93b5d-default-rtdb.firebaseio.com",
-        projectId: "upload-gambar-93b5d",
-        storageBucket: "upload-gambar-93b5d.firebasestorage.app",
-        messagingSenderId: "1023138864386",
-        appId: "1:1023138864386:web:79b78fa01d5f138226b61b"
+        apiKey: "AIzaSyBEafF9NJQZMVaC0H1uKWkvSESOuCg8nIs",
+        authDomain: "toserba-enak.firebaseapp.com",
+        databaseURL: "https://toserba-enak-default-rtdb.firebaseio.com",
+        projectId: "toserba-enak",
+        storageBucket: "toserba-enak.firebasestorage.app",
+        messagingSenderId: "915285236417",
+        appId: "1:915285236417:web:dfb4d2d6cecc85f5fcd240",
+        measurementId: "G-FLMF462XNP"
     };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // Variabel global
     let daftarKaryawan = [];
     let dataAgenda = [];
     let dataChatGrup = [];
@@ -459,7 +389,6 @@
     let currentUserNama = "";
     let listenersReady = false;
 
-    // ============ FUNGSI UTILITY ============
     function showToast(msg) {
         const toast = document.getElementById('toastNotif');
         document.getElementById('toastMessage').innerText = msg;
@@ -475,24 +404,18 @@
     }
 
     function getTodayDate() {
-        const today = new Date();
-        return today.toISOString().split('T')[0];
+        return new Date().toISOString().split('T')[0];
     }
 
     function formatTanggal(dateStr) {
         if (!dateStr) return '-';
         const parts = dateStr.split('-');
-        if (parts.length === 3) {
-            return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        }
-        return dateStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
-    // ============ MANAJEMEN SESSION ============
     function guardSession() {
         const isAdmin = sessionStorage.getItem('isAdminLoggedIn') === 'true';
         const isKaryawan = sessionStorage.getItem('isKaryawanLoggedIn') === 'true';
-        
         if (!isAdmin && !isKaryawan) {
             document.getElementById('screen-main').classList.add('d-none');
             document.getElementById('screen-login').classList.remove('d-none');
@@ -503,20 +426,13 @@
     function showMain() {
         document.getElementById('screen-login').classList.add('d-none');
         document.getElementById('screen-main').classList.remove('d-none');
-        
-        const role = sessionStorage.getItem('role');
-        const isAdmin = (role === 'admin');
-        
-        const adminTabs = ['adminOnlyTabs', 'adminOnlyTabs2', 'adminOnlyTabs3'];
-        adminTabs.forEach(tabId => {
-            const el = document.getElementById(tabId);
-            if (el) el.style.display = isAdmin ? 'block' : 'none';
-        });
-        
-        document.getElementById('currentUserDisplay').innerHTML = `<i class="fas fa-user-circle"></i> ${escapeHtml(currentUserNama || currentUser || 'User')}`;
+        const isAdmin = sessionStorage.getItem('role') === 'admin';
+        document.getElementById('adminOnlyTabs').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminOnlyTabs2').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('adminOnlyTabs3').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('currentUserDisplay').innerHTML = `<i class="fas fa-user-circle"></i> ${escapeHtml(currentUserNama || currentUser)}`;
     }
 
-    // ============ LOGIN & LOGOUT ============
     window.prosesLogin = async function(e) {
         e.preventDefault();
         const u = document.getElementById('username').value.trim();
@@ -541,274 +457,177 @@
         try {
             const snap = await get(ref(database, 'karyawan'));
             const data = snap.val() || {};
-            const foundEntry = Object.entries(data).find(([id, val]) =>
-                val.username === u && val.password === p && val.status === 'Aktif'
-            );
+            const foundEntry = Object.entries(data).find(([id, val]) => val.username === u && val.password === p && val.status === 'Aktif');
 
             if (foundEntry) {
                 const [karyawanId, karyawanData] = foundEntry;
-                
                 sessionStorage.setItem('isKaryawanLoggedIn', 'true');
                 sessionStorage.setItem('isAdminLoggedIn', 'false');
                 sessionStorage.setItem('role', 'karyawan');
                 sessionStorage.setItem('currentUser', u);
-                sessionStorage.setItem('currentKaryawanId', karyawanId);
                 currentUser = u;
                 currentUserNama = karyawanData.nama;
-                
                 showMain();
                 initFirebaseListeners();
                 await set(ref(database, `online/${u}`), true);
                 
-                setTimeout(() => {
-                    kirimPesanWelcome();
-                }, 1000);
+                // Pesan welcome ke grup
+                const welcomeMsg = `🎉 Selamat datang ${currentUserNama} bergabung di grup chat! 🎉`;
+                await push(ref(database, 'chatGrup'), {
+                    from: "System",
+                    fromName: "System",
+                    pesan: welcomeMsg,
+                    waktu: Date.now(),
+                    type: "system"
+                });
                 
                 showToast(`Selamat datang ${karyawanData.nama}!`);
             } else {
                 alertEl.classList.remove('d-none');
-                alertEl.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Username / Password salah!';
+                alertEl.innerHTML = 'Username / Password salah!';
             }
         } catch (err) {
             console.error(err);
             alertEl.classList.remove('d-none');
-            alertEl.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Error koneksi database!';
+            alertEl.innerHTML = 'Error koneksi database! Periksa Firebase Rules!';
         }
     };
 
-    async function kirimPesanWelcome() {
-        const welcomeMsg = `🎉 Selamat datang ${currentUserNama} bergabung di grup chat! 🎉`;
-        const newRef = push(ref(database, 'chatGrup'));
-        await set(newRef, {
-            from: "System",
-            fromName: "System",
-            pesan: welcomeMsg,
-            waktu: Date.now(),
-            type: "system"
-        });
-    }
-
     window.prosesLogout = async function() {
-        const user = sessionStorage.getItem('currentUser');
-        
-        if (user) {
-            await set(ref(database, `online/${user}`), false);
-            
-            if (currentUserNama && currentUserNama !== "Admin") {
-                const leaveMsg = `👋 ${currentUserNama} telah meninggalkan grup`;
-                const newRef = push(ref(database, 'chatGrup'));
-                await set(newRef, {
-                    from: "System",
-                    fromName: "System",
-                    pesan: leaveMsg,
-                    waktu: Date.now(),
-                    type: "system"
-                });
-            }
+        if (currentUser && currentUser !== "adminenakkkk") {
+            const leaveMsg = `👋 ${currentUserNama} telah meninggalkan grup`;
+            await push(ref(database, 'chatGrup'), {
+                from: "System",
+                fromName: "System",
+                pesan: leaveMsg,
+                waktu: Date.now(),
+                type: "system"
+            });
+            await set(ref(database, `online/${currentUser}`), false);
+        } else if (currentUser === "adminenakkkk") {
+            await set(ref(database, `online/${currentUser}`), false);
         }
-        
         sessionStorage.clear();
-        currentUser = null;
         location.reload();
     };
 
-    // ============ GRUP CHAT ============
+    // CHAT
     function updateActiveUsersList() {
         const container = document.getElementById('activeUsersList');
         if (!container) return;
-        
-        const activeUsers = Object.entries(onlineUsers)
-            .filter(([user, isOnline]) => isOnline === true)
-            .map(([user]) => user);
-        
-        const onlineCount = activeUsers.length;
-        document.getElementById('totalOnlineBadge').innerHTML = `${onlineCount} Online`;
-        document.getElementById('statOnlineNow').innerHTML = onlineCount;
-        
+        const activeUsers = Object.entries(onlineUsers).filter(([u, on]) => on === true).map(([u]) => u);
+        document.getElementById('totalOnlineBadge').innerHTML = `${activeUsers.length} Online`;
+        document.getElementById('statOnlineNow').innerHTML = activeUsers.length;
         if (activeUsers.length === 0) {
             container.innerHTML = '<small class="text-muted">Tidak ada user online</small>';
             return;
         }
-        
         container.innerHTML = activeUsers.map(user => {
             const karyawan = daftarKaryawan.find(k => k.username === user);
-            const namaTampil = karyawan ? karyawan.nama : user;
-            const isAdmin = user === 'adminenakkkk';
-            return `
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                    <span>
-                        <span class="online-indicator online"></span>
-                        ${escapeHtml(namaTampil)} ${isAdmin ? '<span class="badge bg-danger">Admin</span>' : ''}
-                    </span>
-                    <small class="text-success"><i class="fas fa-circle fa-xs"></i> Online</small>
-                </div>
-            `;
+            const nama = karyawan ? karyawan.nama : user;
+            return `<div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <span><span class="online-indicator online"></span> ${escapeHtml(nama)}</span>
+                        <small class="text-success">Online</small>
+                    </div>`;
         }).join('');
     }
 
     function loadChatGrup() {
         const box = document.getElementById('boxChat');
         if (!box) return;
-
         if (dataChatGrup.length === 0) {
-            box.innerHTML = '<div class="text-center text-muted p-4">Belum ada pesan. Mulai chat grup!</div>';
+            box.innerHTML = '<div class="text-center text-muted p-4">Belum ada pesan. Mulai chat!</div>';
             return;
         }
-
-        box.innerHTML = dataChatGrup.sort((a, b) => (a.waktu || 0) - (b.waktu || 0)).map(msg => {
-            const time = msg.waktu ? new Date(msg.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '';
+        box.innerHTML = dataChatGrup.sort((a,b) => (a.waktu||0)-(b.waktu||0)).map(msg => {
+            const time = msg.waktu ? new Date(msg.waktu).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}) : '';
             const isSystem = msg.type === 'system';
             const isOwn = msg.from === currentUser;
-            
             if (isSystem) {
-                return `
-                    <div class="text-center my-2">
-                        <small class="bg-secondary text-white px-3 py-1 rounded-pill" style="font-size: 11px;">
-                            <i class="fas fa-info-circle"></i> ${escapeHtml(msg.pesan)}
-                        </small>
-                    </div>
-                `;
+                return `<div class="text-center my-2"><small class="bg-secondary text-white px-3 py-1 rounded-pill">${escapeHtml(msg.pesan)}</small></div>`;
             }
-            
-            return `
-                <div class="mb-3 ${isOwn ? 'text-end' : 'text-start'}">
-                    <div class="d-inline-block p-2 rounded shadow-sm message-bubble ${isOwn ? 'bg-primary text-white' : 'bg-white border'}" 
-                         style="max-width: 75%;">
-                        <small class="d-block ${isOwn ? 'text-white-50' : 'text-muted'} mb-1">
-                            <b>${isOwn ? 'Anda' : escapeHtml(msg.fromName || msg.from)}</b>
-                        </small>
-                        <div class="mt-1">${escapeHtml(msg.pesan)}</div>
-                        <small class="d-block ${isOwn ? 'text-white-50' : 'text-muted'} mt-1" style="font-size: 10px;">${time}</small>
-                    </div>
-                </div>
-            `;
+            return `<div class="mb-3 ${isOwn ? 'text-end' : 'text-start'}">
+                        <div class="d-inline-block p-2 rounded shadow-sm ${isOwn ? 'bg-primary text-white' : 'bg-white border'}" style="max-width:75%">
+                            <small class="d-block mb-1"><b>${isOwn ? 'Anda' : escapeHtml(msg.fromName || msg.from)}</b></small>
+                            <div>${escapeHtml(msg.pesan)}</div>
+                            <small class="d-block mt-1" style="font-size:10px">${time}</small>
+                        </div>
+                    </div>`;
         }).join('');
-
         box.scrollTop = box.scrollHeight;
     }
 
     window.kirimChatGrup = async function() {
-        if (!currentUser) {
-            showToast('Anda belum login!');
-            return;
-        }
-        
-        const pesanInput = document.getElementById('inputPesanChat');
-        const pesan = pesanInput.value.trim();
-        
-        if (!pesan) {
-            showToast('Pesan tidak boleh kosong');
-            return;
-        }
-
-        try {
-            const newRef = push(ref(database, 'chatGrup'));
-            await set(newRef, {
-                from: currentUser,
-                fromName: currentUserNama || currentUser,
-                pesan: pesan,
-                waktu: Date.now(),
-                type: "message"
-            });
-
-            pesanInput.value = '';
-            hitungPesanHariIni();
-        } catch (err) {
-            console.error(err);
-            showToast('Gagal mengirim pesan');
-        }
+        if (!currentUser) return showToast('Login dulu!');
+        const pesan = document.getElementById('inputPesanChat').value.trim();
+        if (!pesan) return showToast('Pesan kosong');
+        await push(ref(database, 'chatGrup'), {
+            from: currentUser,
+            fromName: currentUserNama,
+            pesan: pesan,
+            waktu: Date.now(),
+            type: "message"
+        });
+        document.getElementById('inputPesanChat').value = '';
     };
 
-    function hitungPesanHariIni() {
-        const today = new Date().toDateString();
-        const todayMsgs = dataChatGrup.filter(msg => {
-            const msgDate = msg.waktu ? new Date(msg.waktu).toDateString() : '';
-            return msgDate === today && msg.type !== 'system';
-        });
-        document.getElementById('statPesanHariIni').innerHTML = todayMsgs.length;
-    }
-
-    // ============ ABSENSI ============
+    // ABSENSI
     window.absenMasuk = async function() {
-        if (!currentUser) return showToast('Login dulu bro!');
-        
+        if (!currentUser) return showToast('Login dulu!');
         const today = getTodayDate();
         const absenRef = ref(database, `absensi/${currentUser}/${today}`);
         const snap = await get(absenRef);
-        
-        if (snap.exists() && snap.val().masuk) {
-            showToast('⚠️ Kamu sudah absen masuk hari ini!');
-            return;
-        }
-        
+        if (snap.exists() && snap.val().masuk) return showToast('Sudah absen masuk hari ini!');
         const waktu = new Date().toLocaleTimeString('id-ID');
-        await set(absenRef, {
-            masuk: waktu,
-            tanggal: today,
+        await set(absenRef, { 
+            masuk: waktu, 
+            tanggal: today, 
             nama: currentUserNama,
             username: currentUser,
-            status: 'Hadir'
+            status: 'Hadir' 
         });
-        
-        showToast(`✅ Absen masuk berhasil jam ${waktu}`);
+        showToast(`✅ Absen masuk jam ${waktu}`);
         loadRiwayatAbsensiSaya();
+        loadRekapAbsensi();
         
-        const notifMsg = `📋 ${currentUserNama} telah absen masuk jam ${waktu}`;
-        const newRef = push(ref(database, 'chatGrup'));
-        await set(newRef, {
+        // Notifikasi ke grup
+        await push(ref(database, 'chatGrup'), {
             from: "System",
             fromName: "System",
-            pesan: notifMsg,
+            pesan: `📋 ${currentUserNama} telah absen masuk jam ${waktu}`,
             waktu: Date.now(),
             type: "system"
         });
     };
-    
+
     window.absenPulang = async function() {
-        if (!currentUser) return showToast('Login dulu bro!');
-        
+        if (!currentUser) return showToast('Login dulu!');
         const today = getTodayDate();
         const absenRef = ref(database, `absensi/${currentUser}/${today}`);
         const snap = await get(absenRef);
-        
-        if (!snap.exists()) {
-            showToast('❌ Kamu belum absen masuk hari ini!');
-            return;
-        }
-        
-        if (snap.val().pulang) {
-            showToast('⚠️ Kamu sudah absen pulang hari ini!');
-            return;
-        }
-        
+        if (!snap.exists()) return showToast('Belum absen masuk hari ini!');
+        if (snap.val().pulang) return showToast('Sudah absen pulang hari ini!');
         const waktu = new Date().toLocaleTimeString('id-ID');
         await update(absenRef, { pulang: waktu });
-        
-        showToast(`✅ Absen pulang berhasil jam ${waktu}`);
+        showToast(`✅ Absen pulang jam ${waktu}`);
         loadRiwayatAbsensiSaya();
     };
-    
+
     async function loadRiwayatAbsensiSaya() {
         const container = document.getElementById('riwayatAbsensiSaya');
         if (!container) return;
-        
         const snap = await get(ref(database, `absensi/${currentUser}`));
         const data = snap.val() || {};
-        
         const entries = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
-        
         if (entries.length === 0) {
             container.innerHTML = '<div class="text-center text-muted">Belum ada riwayat absensi</div>';
             return;
         }
-        
         container.innerHTML = entries.map(([tgl, val]) => `
             <div class="border-bottom p-2">
                 <div class="d-flex justify-content-between">
                     <strong>${formatTanggal(tgl)}</strong>
-                    <span class="badge ${val.masuk ? 'bg-success' : 'bg-danger'}">
-                        ${val.status || 'Hadir'}
-                    </span>
+                    <span class="badge bg-success">${val.status || 'Hadir'}</span>
                 </div>
                 <div class="small text-muted">
                     <i class="fas fa-sign-in-alt"></i> Masuk: ${val.masuk || '-'} &nbsp;
@@ -817,37 +636,24 @@
             </div>
         `).join('');
     }
-    
+
     async function loadRekapAbsensi() {
         const tbody = document.getElementById('tabelRekapAbsensiBody');
         if (!tbody) return;
-        
-        const karyawanAktif = daftarKaryawan.filter(k => k.status === 'Aktif');
-        
-        if (karyawanAktif.length === 0) {
+        const aktif = daftarKaryawan.filter(k => k.status === 'Aktif');
+        if (aktif.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center">Belum ada data karyawan</td></tr>';
             return;
         }
-        
-        const rekapData = [];
-        
-        for (const karyawan of karyawanAktif) {
-            const snap = await get(ref(database, `absensi/${karyawan.username}`));
+        const rekap = [];
+        for (const k of aktif) {
+            const snap = await get(ref(database, `absensi/${k.username}`));
             const absensi = snap.val() || {};
-            
             let hadir = 0;
-            
-            Object.values(absensi).forEach(absen => {
-                if (absen.masuk) hadir++;
-            });
-            
-            rekapData.push({
-                nama: karyawan.nama,
-                hadir: hadir
-            });
+            Object.values(absensi).forEach(a => { if (a.masuk) hadir++; });
+            rekap.push({ nama: k.nama, hadir });
         }
-        
-        tbody.innerHTML = rekapData.map((r, i) => `
+        tbody.innerHTML = rekap.map((r,i) => `
             <tr>
                 <td>${i+1}</td>
                 <td>${escapeHtml(r.nama)}</td>
@@ -859,98 +665,73 @@
         `).join('');
     }
 
-    // EXPORT ABSENSI
     window.exportAbsensiExcel = async function() {
-        const karyawanAktif = daftarKaryawan.filter(k => k.status === 'Aktif');
+        const aktif = daftarKaryawan.filter(k => k.status === 'Aktif');
         const data = [];
-        
-        for (const karyawan of karyawanAktif) {
-            const snap = await get(ref(database, `absensi/${karyawan.username}`));
+        for (const k of aktif) {
+            const snap = await get(ref(database, `absensi/${k.username}`));
             const absensi = snap.val() || {};
-            
             let hadir = 0;
-            Object.values(absensi).forEach(absen => {
-                if (absen.masuk) hadir++;
-            });
-            
-            data.push({
-                'Nama Karyawan': karyawan.nama,
-                'Username': karyawan.username,
-                'Total Hadir': hadir
-            });
+            Object.values(absensi).forEach(a => { if (a.masuk) hadir++; });
+            data.push({ 'Nama Karyawan': k.nama, 'Username': k.username, 'Total Hadir': hadir });
         }
-        
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Rekap Absensi');
-        XLSX.writeFile(wb, `Rekap_Absensi_${new Date().toLocaleDateString()}.xlsx`);
+        XLSX.writeFile(wb, `Rekap_Absensi_${getTodayDate()}.xlsx`);
         showToast('✅ Export Excel berhasil!');
     };
-    
+
     window.exportAbsensiPDF = async function() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('landscape');
-        
         doc.setFontSize(16);
         doc.text('LAPORAN REKAP ABSENSI KARYAWAN', 148, 15, { align: 'center' });
         doc.setFontSize(10);
         doc.text(`Tanggal Cetak: ${new Date().toLocaleString()}`, 148, 22, { align: 'center' });
         
-        const karyawanAktif = daftarKaryawan.filter(k => k.status === 'Aktif');
-        const data = [];
-        
-        for (const karyawan of karyawanAktif) {
-            const snap = await get(ref(database, `absensi/${karyawan.username}`));
+        const aktif = daftarKaryawan.filter(k => k.status === 'Aktif');
+        const body = [];
+        for (const k of aktif) {
+            const snap = await get(ref(database, `absensi/${k.username}`));
             const absensi = snap.val() || {};
-            
             let hadir = 0;
-            Object.values(absensi).forEach(absen => {
-                if (absen.masuk) hadir++;
-            });
-            
-            data.push([karyawan.nama, karyawan.username, hadir]);
+            Object.values(absensi).forEach(a => { if (a.masuk) hadir++; });
+            body.push([k.nama, k.username, hadir]);
         }
-        
-        doc.autoTable({
-            head: [['Nama Karyawan', 'Username', 'Total Hadir']],
-            body: data,
+        doc.autoTable({ 
+            head: [['Nama Karyawan', 'Username', 'Total Hadir']], 
+            body: body, 
             startY: 30,
             theme: 'striped',
             headStyles: { fillColor: [102, 126, 234] }
         });
-        
-        doc.save(`Laporan_Absensi_${new Date().toLocaleDateString()}.pdf`);
+        doc.save(`Laporan_Absensi_${getTodayDate()}.pdf`);
         showToast('✅ Export PDF berhasil!');
     };
 
-    // ============ MANAJEMEN KARYAWAN ============
+    // KARYAWAN
     function renderKaryawan() {
         const tbody = document.getElementById('tabelManajemenKaryawan');
         if (!tbody) return;
-
         if (daftarKaryawan.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="text-center">Belum ada data karyawan</td></tr>';
             return;
         }
-
         tbody.innerHTML = daftarKaryawan.map((k, i) => `
             <tr>
-                <td>${i + 1}</td>
+                <td>${i+1}</td>
                 <td>
                     <strong>${escapeHtml(k.nama)}</strong><br>
-                    <small class="text-muted">User: <code>${escapeHtml(k.username || '-')}</code></small><br>
-                    <small class="text-muted">Pass: <code>${escapeHtml(k.password || '-')}</code></small>
-                  </td>
-                <td>
-                    <span class="badge ${k.status === 'Aktif' ? 'bg-success' : 'bg-secondary'}">
-                        ${k.status || 'Aktif'}
-                    </span>
-                  </td>
+                    <small class="text-muted">User: <code>${escapeHtml(k.username)}</code></small><br>
+                    <small class="text-muted">Pass: <code>${escapeHtml(k.password)}</code></small>
+                </td>
+                <td><span class="badge bg-success">${k.status || 'Aktif'}</span></td>
                 <td>
                     <button class="btn btn-sm btn-danger" onclick="hapusKaryawan('${k.id}','${escapeHtml(k.nama)}')">
                         <i class="fas fa-trash"></i> Hapus
                     </button>
-                  </td>
+                </td>
             </tr>
         `).join('');
     }
@@ -962,12 +743,10 @@
         if (daftarKaryawan.some(k => k.nama.toLowerCase() === nama.toLowerCase())) {
             return showToast('Nama sudah ada!');
         }
-
         const base = nama.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6);
         const nomor = Math.floor(Math.random() * 900 + 100);
         const username = base + nomor;
         const password = Math.random().toString(36).slice(-8);
-
         const newRef = push(ref(database, 'karyawan'));
         await set(newRef, {
             nama: nama,
@@ -976,21 +755,17 @@
             password: password,
             createdAt: Date.now()
         });
-
         document.getElementById('inputNamaKaryawanBaru').value = '';
         showToast(`✅ Akun berhasil dibuat!\nUsername: ${username}\nPassword: ${password}`);
     };
-    
+
     window.hapusSemuaKaryawan = async function() {
         guardSession();
         if (!confirm('⚠️ PERINGATAN! Ini akan menghapus SEMUA data karyawan. Lanjutkan?')) return;
-        
         showToast('⏳ Menghapus semua karyawan...');
-        
         for (const karyawan of daftarKaryawan) {
             await remove(ref(database, `karyawan/${karyawan.id}`));
         }
-        
         showToast('✅ Semua karyawan telah dihapus!');
     };
 
@@ -1001,19 +776,16 @@
         showToast(`✅ Karyawan ${nama} telah dihapus!`);
     };
 
-    // ============ AGENDA SURAT ============
+    // AGENDA SURAT
     function renderAgenda() {
         const tbody = document.getElementById('tabelAgendaBody');
         if (!tbody) return;
-        
         if (dataAgenda.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="text-center">Belum ada data agenda</td></tr>';
             return;
         }
-        
-        const sortedAgenda = [...dataAgenda].sort((a,b) => b.createdAt - a.createdAt);
-        
-        tbody.innerHTML = sortedAgenda.map((item, i) => `
+        const sorted = [...dataAgenda].sort((a,b) => b.createdAt - a.createdAt);
+        tbody.innerHTML = sorted.map((item, i) => `
             <tr>
                 <td>${i+1}</td>
                 <td>${formatTanggal(item.tanggal)}</td>
@@ -1023,19 +795,14 @@
                 <td>${escapeHtml(item.kontak)}</td>
                 <td>${escapeHtml(item.perihal)}</td>
                 <td>${escapeHtml(item.keterangan || '-')}</td>
-                <td>
-                    <button class="btn btn-sm btn-danger" onclick="hapusAgenda('${item.id}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                  </td>
+                <td><button class="btn btn-sm btn-danger" onclick="hapusAgenda('${item.id}')"><i class="fas fa-trash"></i></button></td>
             </tr>
         `).join('');
     }
-    
+
     window.tambahAgenda = async function(e) {
         e.preventDefault();
         guardSession();
-        
         const newRef = push(ref(database, 'agenda'));
         await set(newRef, {
             tanggal: document.getElementById('agendaTanggal').value,
@@ -1047,35 +814,32 @@
             keterangan: document.getElementById('agendaKeterangan').value,
             createdAt: Date.now()
         });
-        
         document.getElementById('formAgenda').reset();
         document.getElementById('agendaTanggal').valueAsDate = new Date();
         showToast('✅ Agenda surat berhasil ditambahkan!');
     };
-    
+
     window.hapusAgenda = async function(id) {
         guardSession();
         if (!confirm('Hapus agenda ini?')) return;
         await remove(ref(database, `agenda/${id}`));
         showToast('✅ Agenda dihapus.');
     };
-    
+
     window.filterAgenda = function() {
         const search = document.getElementById('searchAgenda').value.toLowerCase();
         const rows = document.querySelectorAll('#tabelAgendaBody tr');
-        
         rows.forEach(row => {
             const text = row.innerText.toLowerCase();
             row.style.display = text.includes(search) ? '' : 'none';
         });
     };
 
-    // ============ MEMO PDF ============
+    // MEMO PDF
     window.downloadMemoPDF = function() {
         guardSession();
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        
         doc.setFontSize(20);
         doc.text('MEMORANDUM', 105, 20, { align: 'center' });
         doc.setFontSize(12);
@@ -1083,33 +847,25 @@
         doc.text(`Kepada: ${document.getElementById('memoKepada').value || '-'}`, 20, 55);
         doc.text(`Tanggal: ${document.getElementById('memoTanggal').value || '-'}`, 20, 65);
         doc.text(`Perihal: ${document.getElementById('memoPerihal').value || '-'}`, 20, 75);
-        
-        const isiMemo = document.getElementById('memoIsi').value || '-';
-        const splitText = doc.splitTextToSize(isiMemo, 170);
-        doc.text(splitText, 20, 90);
-        
+        const isi = document.getElementById('memoIsi').value || '-';
+        const split = doc.splitTextToSize(isi, 170);
+        doc.text(split, 20, 90);
         doc.save(`Memo_${Date.now()}.pdf`);
-        showToast('Memo berhasil diunduh!');
+        showToast('✅ Memo berhasil diunduh!');
     };
 
-    // ============ UPDATE STAT ============
+    // UPDATE STAT
     function updateStat() {
-        const statTotal = document.getElementById('statTotalKaryawan');
-        if (statTotal) statTotal.innerHTML = daftarKaryawan.length;
-        hitungPesanHariIni();
+        document.getElementById('statTotalKaryawan').innerHTML = daftarKaryawan.length;
     }
 
-    // ============ TAB NAVIGATION ============
+    // TAB NAVIGATION
     window.bukaTab = function(event, tabName) {
         guardSession();
         document.querySelectorAll('.tab-konten').forEach(el => el.classList.add('d-none'));
         document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
-        
         document.getElementById(`tab-${tabName}`).classList.remove('d-none');
-        if (event && event.currentTarget) {
-            event.currentTarget.classList.add('active');
-        }
-        
+        if (event && event.currentTarget) event.currentTarget.classList.add('active');
         if (tabName === 'agenda') renderAgenda();
         if (tabName === 'karyawan') renderKaryawan();
         if (tabName === 'absensi') {
@@ -1118,7 +874,7 @@
         }
     };
 
-    // ============ FIREBASE LISTENERS ============
+    // FIREBASE LISTENERS
     function initFirebaseListeners() {
         if (listenersReady) return;
         listenersReady = true;
@@ -1131,13 +887,10 @@
         });
 
         onValue(ref(database, 'karyawan'), (snap) => {
-            daftarKaryawan = snap.val()
-                ? Object.entries(snap.val()).map(([id, val]) => ({
-                    id, nama: val.nama, status: val.status || 'Aktif',
-                    username: val.username || '', password: val.password || ''
-                }))
-                : [];
-            
+            daftarKaryawan = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({
+                id, nama: val.nama, status: val.status || 'Aktif',
+                username: val.username || '', password: val.password || ''
+            })) : [];
             renderKaryawan();
             updateStat();
             if (document.getElementById('tab-absensi') && !document.getElementById('tab-absensi').classList.contains('d-none')) {
@@ -1148,21 +901,14 @@
         onValue(ref(database, 'chatGrup'), (snap) => {
             dataChatGrup = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
             loadChatGrup();
-            hitungPesanHariIni();
-            
-            if (dataChatGrup.length > 0 && currentUser) {
-                const lastMsg = dataChatGrup[dataChatGrup.length - 1];
-                if (lastMsg && lastMsg.from !== currentUser && lastMsg.type !== 'system') {
-                    showToast(`💬 Pesan baru dari ${lastMsg.fromName || lastMsg.from}`);
-                }
-            }
         });
 
         onValue(ref(database, 'online'), (snap) => {
             onlineUsers = snap.val() || {};
             updateActiveUsersList();
         });
-        
+
+        // Keep alive setiap 30 detik
         setInterval(async () => {
             if (currentUser && (sessionStorage.getItem('isKaryawanLoggedIn') === 'true' || sessionStorage.getItem('isAdminLoggedIn') === 'true')) {
                 await set(ref(database, `online/${currentUser}`), true);
@@ -1170,7 +916,7 @@
         }, 30000);
     }
 
-    // ============ INITIALIZATION ============
+    // INITIALIZATION
     function init() {
         // Preview memo
         const memoFields = ['memoDari', 'memoKepada', 'memoTanggal', 'memoPerihal', 'memoIsi'];
@@ -1185,40 +931,29 @@
             }
         });
         
-        // Set default date untuk agenda
-        const agendaTanggal = document.getElementById('agendaTanggal');
-        if (agendaTanggal) {
-            agendaTanggal.valueAsDate = new Date();
-        }
+        document.getElementById('agendaTanggal').valueAsDate = new Date();
         
         const isAdmin = sessionStorage.getItem('isAdminLoggedIn') === 'true';
         const isKaryawan = sessionStorage.getItem('isKaryawanLoggedIn') === 'true';
         
         if (isAdmin || isKaryawan) {
             currentUser = sessionStorage.getItem('currentUser');
-            
             if (isAdmin) {
                 currentUserNama = "Admin";
             } else {
                 const karyawan = daftarKaryawan.find(k => k.username === currentUser);
                 currentUserNama = karyawan ? karyawan.nama : currentUser;
             }
-            
             showMain();
             initFirebaseListeners();
-            
-            if ((isKaryawan || isAdmin) && currentUser) {
-                set(ref(database, `online/${currentUser}`), true);
-            }
+            if (currentUser) set(ref(database, `online/${currentUser}`), true);
         } else {
             document.getElementById('screen-login').classList.remove('d-none');
             document.getElementById('screen-main').classList.add('d-none');
         }
     }
 
-    // START
     init();
 </script>
-
 </body>
 </html>
