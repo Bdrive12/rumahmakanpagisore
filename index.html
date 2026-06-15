@@ -1,959 +1,527 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toserba Enak</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .card { border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: none; margin-bottom: 20px; }
-        .card-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px 15px 0 0; padding: 15px 20px; font-weight: bold; }
-        .card-header i, .card-header span { color: white !important; }
-        .btn-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; }
-        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); color: white; }
-        .chat-box { height: 450px; overflow-y: auto; background: #f8f9fa; border-radius: 10px; padding: 15px; }
-        .login-card { max-width: 450px; margin: 100px auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .online-indicator { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
-        .online { background-color: #28a745; box-shadow: 0 0 5px #28a745; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        .toast-notif { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: none; }
-        .message-bubble { max-width: 70%; word-wrap: break-word; }
-        .bg-gradient-custom { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .btn-excel { background: #28a745; color: white; }
-        .btn-excel:hover { background: #218838; color: white; }
-        .btn-pdf { background: #dc3545; color: white; }
-        .btn-pdf:hover { background: #c82333; color: white; }
-        .table-responsive { overflow-x: auto; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Cheseely.id • Kue Premium</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background: #faf7f4; color: #3e3640; line-height: 1.5; min-height: 100vh; min-height: 100dvh; }
+
+    .cart-overlay,.form-overlay,.admin-overlay,.review-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 998;
+      opacity: 0; visibility: hidden; transition: .3s;
+    }
+    .cart-overlay.active,.form-overlay.active,.admin-overlay.active,.review-overlay.active { opacity: 1; visibility: visible; }
+
+    .floating-cart,.floating-chat {
+      position: fixed; right: 16px; z-index: 200; background: rgba(255,255,255,.92);
+      border: 1px solid #e2d4ca; padding: 10px 16px; border-radius: 40px; cursor: pointer;
+      font-weight: 600; color: #4a3b42; font-size: 14px; display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.06);
+    }
+    .floating-cart { top: 16px; }
+    .floating-chat { bottom: 16px; background: #25D366; color: #fff; border: none; }
+
+    .cart-badge { background: #b4846c; color: #fff; font-size: 12px; width: 22px; height: 22px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-weight:700; }
+
+    .hero { padding: 56px 20px 28px; text-align: center; background: #fff; border-bottom: 1px solid #f0e7e1; }
+    .hero h1 { font-size: clamp(24px, 8vw, 38px); font-weight: 700; color: #3f3340; margin-bottom: 8px; }
+    .hero p { color: #7b6e73; font-size: clamp(14px, 4vw, 17px); max-width: 420px; margin: 0 auto 24px; }
+
+    .search-box { max-width: 480px; margin: 0 auto; }
+    .search-box input { width: 100%; padding: 14px 20px; border-radius: 50px; border: 1.5px solid #e7dbd2; background: #fdfbf9; font-size: 15px; }
+
+    .products { max-width: 1200px; margin: 16px auto; padding: 8px 12px 32px; display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 14px; }
+    @media (min-width: 600px) { .products { grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 20px; padding: 12px 20px 40px; } }
+
+    .card { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,.03); border: 1px solid #f3eae4; display: flex; flex-direction: column; }
+    .card img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+    .card-content { padding: 12px; display:flex; flex-direction: column; flex:1; }
+    .card h3 { font-size: 16px; font-weight: 600; color: #3e3540; }
+    .price { font-size: 18px; font-weight: 700; color: #b4846c; margin: 4px 0 10px; }
+    .btn-add { width: 100%; padding: 10px; border: none; background: #f9f3ed; color: #4d3e44; border-radius: 30px; font-weight: 600; border: 1px solid #e7d9ce; }
+
+    .cart,.admin-panel {
+      position: fixed; right: -100%; top: 0; width: 100%; max-width: 420px; height: 100dvh; background: #fff;
+      box-shadow: -8px 0 30px rgba(0,0,0,.1); transition: right .35s; padding: 20px 16px; overflow-y: auto; z-index: 999; visibility: hidden;
+    }
+    .cart.active,.admin-panel.active { right: 0; visibility: visible; }
+
+    .cart-header { display:flex; justify-content: space-between; align-items:center; margin-bottom: 16px; font-weight: 700; font-size: 20px; color: #3a2f35; padding-bottom: 10px; border-bottom: 2px solid #f5ede7; }
+    .close,.close-form,.close-modal { cursor: pointer; }
+
+    .cart-item { padding: 10px 0; border-bottom: 1px solid #f5ede7; display:flex; justify-content: space-between; align-items:center; gap: 10px; }
+    .btn-remove { background: #fff0f0; border: none; padding: 6px 10px; border-radius: 16px; color: #c0392b; }
+    .cart-footer { border-top: 2px solid #f5ede7; padding-top: 14px; margin-top: 12px; }
+    .total { font-size: 20px; font-weight: 700; display:flex; justify-content: space-between; margin-bottom: 10px; }
+
+    .btn-order,.btn-qris,.btn-submit-order,.admin-form button {
+      width: 100%; padding: 12px; border: none; color: #fff; font-weight: 700; border-radius: 30px; cursor: pointer;
+    }
+    .btn-order { background: #b4846c; margin-bottom: 8px; }
+    .btn-qris { background: #0d2b45; }
+
+    .form-modal,.admin-login-modal,.qris-modal {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(.9);
+      background: #fff; padding: 20px; border-radius: 24px; z-index: 1001; width: 92%; max-width: 380px;
+      opacity: 0; visibility: hidden; transition: .3s;
+    }
+    .form-modal.active,.admin-login-modal.active,.qris-modal.active { opacity: 1; visibility: visible; transform: translate(-50%,-50%) scale(1); }
+
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display:block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .form-group input,.form-group textarea,.admin-form input {
+      width: 100%; padding: 11px 12px; border-radius: 12px; border: 1.5px solid #e7dbd2; font-size: 14px; background: #fdfbf9;
+    }
+
+    .upload-area { border: 2px dashed #e7dbd2; border-radius: 12px; padding: 14px; text-align:center; cursor:pointer; background:#fdfbf9; }
+    .upload-preview { width: 100%; max-height: 140px; object-fit: contain; border-radius: 8px; margin-top: 8px; display: none; }
+    .upload-preview.show { display:block; }
+    .upload-status { font-size: 12px; margin-top: 4px; }
+
+    .admin-tabs { display:flex; gap:8px; margin-bottom:12px; border-bottom: 2px solid #f0e4db; padding-bottom:8px; }
+    .admin-tab { padding: 8px 12px; border-radius: 20px; border:none; background:#f9f3ed; font-weight: 600; }
+    .admin-tab.active { background:#4d3e44; color:#fff; }
+    .admin-content { display:none; }
+    .admin-content.active { display:block; }
+
+    .product-list-item { padding: 10px 0; border-bottom:1px solid #f5ede7; }
+    .product-list-item-head { display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:8px; }
+    .product-action { display:flex; gap:6px; }
+    .btn-edit { background:#eef6ff; color:#2c5aa0; border:none; padding:6px 10px; border-radius:14px; font-size:12px; }
+    .btn-del { background:#fff0f0; color:#c0392b; border:none; padding:6px 10px; border-radius:14px; font-size:12px; }
+    .edit-wrap { display:none; gap:8px; grid-template-columns:1fr; }
+    .edit-wrap.active { display:grid; }
+
+    .review-section { max-width: 800px; margin: 24px auto; padding: 20px; background:#fff; border-radius: 24px; box-shadow: 0 8px 20px rgba(0,0,0,.03); }
+    .review-form { display:flex; flex-direction:column; gap:10px; margin-bottom: 20px; }
+    .review-form input,.review-form textarea { padding: 12px; border-radius: 12px; border:1px solid #e7dbd2; }
+    .review-form button { background:#b4846c; color:#fff; border:none; padding:10px; border-radius:20px; }
+
+    #qrisCanvas { width: 200px; height: 200px; margin: 10px auto; background:#fff; border-radius:12px; border:1px solid #eee; display:block; }
+
+    footer { text-align:center; padding: 24px 16px 28px; background:#fff; border-top:1px solid #f0e4da; color:#6f6268; font-size:13px; }
+    .secret-trigger { color:#d5c7be; font-size:12px; margin-top:6px; user-select:none; }
+  </style>
 </head>
 <body>
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="form-overlay" id="formOverlay" onclick="closeOrderForm()"></div>
+  <div class="admin-overlay" id="adminOverlay" onclick="closeAllAdmin()"></div>
+  <div class="review-overlay" id="reviewOverlay" onclick="closeQrisModal()"></div>
 
-<div class="container">
-    <!-- LAYAR LOGIN -->
-    <div id="screen-login">
-        <div class="login-card">
-            <div class="text-center mb-4">
-                <i class="fas fa-comments" style="font-size: 60px; color: #667eea;"></i>
-                <h2 class="mt-3">Toserba Enak</h2>
-                <p class="text-muted">Toserba Enak</p>
-            </div>
-            
-            <form id="formLogin" onsubmit="prosesLogin(event)">
-                <div class="mb-3">
-                    <label class="form-label"><i class="fas fa-user"></i> Username</label>
-                    <input type="text" class="form-control" id="username" placeholder="Masukkan username" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label"><i class="fas fa-lock"></i> Password</label>
-                    <input type="password" class="form-control" id="password" placeholder="Masukkan password" required>
-                </div>
-                <div id="login-alert" class="alert alert-danger d-none"></div>
-                <button type="submit" class="btn btn-gradient w-100">
-                    <i class="fas fa-sign-in-alt"></i> Login
-                </button>
-            </form>
-            
-            <hr class="my-4">
-            <div class="text-center">
-                <small class="text-muted">
-                    <i class="fas fa-info-circle"></i> 
-                </small>
-            </div>
-        </div>
+  <div class="floating-cart" onclick="toggleCart()">🛒 <span class="cart-badge" id="cart-count">0</span></div>
+  <div class="floating-chat" onclick="openChat()">💬 Chat</div>
+
+  <section class="hero">
+    <h1>Kue Premium Spesial</h1>
+    <p>Fresh, lembut, dan dibuat dengan cinta untuk momen terbaikmu</p>
+    <div class="search-box">
+      <input type="text" id="search" placeholder="Cari kue favorit..." oninput="searchProduct()">
+    </div>
+  </section>
+
+  <section class="products" id="product-list"></section>
+
+  <div class="review-section" id="reviewSection">
+    <h3 style="margin-bottom:12px; color:#3a2f35;">💬 Ulasan Pelanggan</h3>
+    <div class="review-form">
+      <input type="text" id="reviewName" placeholder="Nama Kamu">
+      <textarea id="reviewText" placeholder="Tulis ulasanmu..."></textarea>
+      <button onclick="submitReview()">Kirim Ulasan</button>
+    </div>
+    <div id="reviewList"></div>
+  </div>
+
+  <div class="cart" id="cart">
+    <div class="cart-header"><span>🛒 Keranjang</span><span class="close" onclick="closeCart()">✕</span></div>
+    <div id="cart-items"></div>
+    <div class="cart-footer">
+      <div class="total"><span>Total</span><span>Rp <span id="total">0</span></span></div>
+      <button class="btn-order" onclick="openOrderForm()">💬 Pesan via WhatsApp</button>
+      <button class="btn-qris" onclick="openQrisModal()">📲 Bayar QRIS (Dinamis)</button>
+    </div>
+  </div>
+
+  <div class="form-modal" id="orderFormModal">
+    <span class="close-form" onclick="closeOrderForm()">✕</span>
+    <h3>📋 Data Pemesan</h3>
+    <div class="form-group"><label>Nama Lengkap *</label><input type="text" id="customerName"></div>
+    <div class="form-group"><label>Nomor Telepon *</label><input type="tel" id="customerPhone"></div>
+    <div class="form-group"><label>Alamat Lengkap *</label><textarea id="customerAddress"></textarea></div>
+    <div class="form-group"><label>Catatan (opsional)</label><textarea id="customerNote"></textarea></div>
+
+    <div class="form-group">
+      <label>Upload Bukti Pembayaran (opsional)</label>
+      <div class="upload-area" onclick="document.getElementById('proofInput').click()">
+        <span id="proofUploadText">📎 Klik upload bukti transfer</span>
+        <img id="proofPreview" class="upload-preview" alt="Bukti">
+        <div class="upload-status" id="proofStatus"></div>
+      </div>
+      <input type="file" id="proofInput" accept="image/*" style="display:none;" onchange="handleProofSelect(event)">
+      <input type="hidden" id="proofImageUrl" value="">
     </div>
 
-    <!-- LAYAR UTAMA -->
-    <div id="screen-main" class="d-none">
-        <nav class="navbar navbar-dark bg-gradient-custom mb-4 rounded-3">
-            <div class="container-fluid">
-                <span class="navbar-brand text-white">
-                    <i class="fas fa-users"></i> Toserba Enak 
-                </span>
-                <div class="d-flex">
-                    <span class="text-white me-3">
-                        <i class="fas fa-user"></i> <span id="currentUserDisplay" class="text-white">-</span>
-                    </span>
-                    <button class="btn btn-light btn-sm" onclick="prosesLogout()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </button>
-                </div>
-            </div>
-        </nav>
+    <button class="btn-submit-order" onclick="submitOrder()">🚀 Kirim ke WhatsApp</button>
+  </div>
 
-        <ul class="nav nav-tabs mb-3">
-            <li class="nav-item">
-                <button class="nav-link active btn-tab" onclick="bukaTab(event, 'chat')">
-                    <i class="fas fa-comments"></i> Grup Chat
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link btn-tab" onclick="bukaTab(event, 'absensi')">
-                    <i class="fas fa-calendar-check"></i> Absensi
-                </button>
-            </li>
-            <li class="nav-item" id="adminOnlyTabs" style="display: none;">
-                <button class="nav-link btn-tab" onclick="bukaTab(event, 'karyawan')">
-                    <i class="fas fa-users"></i> Kelola Karyawan
-                </button>
-            </li>
-            <li class="nav-item" id="adminOnlyTabs2" style="display: none;">
-                <button class="nav-link btn-tab" onclick="bukaTab(event, 'agenda')">
-                    <i class="fas fa-book"></i> Agenda Surat
-                </button>
-            </li>
-            <li class="nav-item" id="adminOnlyTabs3" style="display: none;">
-                <button class="nav-link btn-tab" onclick="bukaTab(event, 'memo')">
-                    <i class="fas fa-file-alt"></i> Memo PDF
-                </button>
-            </li>
-        </ul>
+  <div class="qris-modal" id="qrisModal">
+    <span class="close-form" onclick="closeQrisModal()">✕</span>
+    <h3>💳 QRIS Dinamis</h3>
+    <p style="font-size:14px;">Total: <strong>Rp <span id="qrisTotal">0</span></strong></p>
+    <canvas id="qrisCanvas" width="200" height="200"></canvas>
+    <p style="font-size:12px; color:#666;">Scan pakai aplikasi e-wallet / mobile banking</p>
+    <button class="btn-submit-order" style="background:#0d2b45; margin-top:8px;" onclick="closeQrisModal()">Selesai</button>
+  </div>
 
-        <!-- TAB CHAT -->
-        <div id="tab-chat" class="tab-konten">
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-header"><i class="fas fa-circle text-success"></i> Online Now</div>
-                        <div class="card-body" id="activeUsersList" style="max-height: 300px; overflow-y: auto;">
-                            <small class="text-muted">Loading...</small>
-                        </div>
-                    </div>
-                    <div class="card mt-3">
-                        <div class="card-header bg-info"><i class="fas fa-chart-line"></i> Statistik</div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Total Karyawan:</span>
-                                <strong id="statTotalKaryawan">0</strong>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Online Sekarang:</span>
-                                <strong id="statOnlineNow">0</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-comment-dots"></i> Grup Chat
-                            <span class="badge bg-light text-dark ms-2" id="totalOnlineBadge">0 Online</span>
-                        </div>
-                        <div class="card-body">
-                            <div id="boxChat" class="chat-box mb-3">
-                                <div class="text-center text-muted p-4">Selamat datang di grup chat!</div>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="inputPesanChat" placeholder="Ketik pesan..." onkeypress="if(event.key==='Enter') kirimChatGrup()">
-                                <button class="btn btn-gradient" onclick="kirimChatGrup()">
-                                    <i class="fas fa-paper-plane"></i> Kirim
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="admin-login-modal" id="adminLoginModal">
+    <span class="close-modal" onclick="closeAdminLogin()">✕</span>
+    <h3>🔐 Admin</h3>
+    <input type="text" id="adminUser" placeholder="Username">
+    <input type="password" id="adminPass" placeholder="Password">
+    <button onclick="adminLogin()" style="background:#4d3e44;">Masuk</button>
+    <p style="font-size:11px;color:#999;text-align:center;margin-top:8px;">admin / admin123</p>
+  </div>
 
-        <!-- TAB ABSENSI -->
-        <div id="tab-absensi" class="tab-konten d-none">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header"><i class="fas fa-fingerprint"></i> Absen Hari Ini</div>
-                        <div class="card-body text-center">
-                            <div id="statusAbsenHariIni" class="mb-3">
-                                <span class="badge bg-secondary">Belum Absen</span>
-                            </div>
-                            <button class="btn btn-success btn-lg w-100 mb-2" onclick="absenMasuk()">
-                                <i class="fas fa-sign-in-alt"></i> Absen Masuk
-                            </button>
-                            <button class="btn btn-danger btn-lg w-100" onclick="absenPulang()">
-                                <i class="fas fa-sign-out-alt"></i> Absen Pulang
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-header"><i class="fas fa-history"></i> Riwayat Absensi Saya</div>
-                        <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                            <div id="riwayatAbsensiSaya" class="text-center text-muted">Loading...</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card mt-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span><i class="fas fa-chart-bar"></i> Rekap Absensi Semua Karyawan</span>
-                    <div>
-                        <button class="btn btn-excel btn-sm me-2" onclick="exportAbsensiExcel()">
-                            <i class="fas fa-file-excel"></i> Export Excel
-                        </button>
-                        <button class="btn btn-pdf btn-sm" onclick="exportAbsensiPDF()">
-                            <i class="fas fa-file-pdf"></i> Export PDF
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-dark">
-                            <tr><th>No</th><th>Nama Karyawan</th><th>Hadir</th><th>Izin</th><th>Sakit</th><th>Alpha</th></tr>
-                        </thead>
-                        <tbody id="tabelRekapAbsensiBody">
-                            <tr><td colspan="6" class="text-center">Loading...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB KARYAWAN -->
-        <div id="tab-karyawan" class="tab-konten d-none">
-            <div class="card">
-                <div class="card-header"><i class="fas fa-user-plus"></i> Tambah Karyawan Baru</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <input type="text" class="form-control" id="inputNamaKaryawanBaru" placeholder="Nama lengkap karyawan">
-                        </div>
-                        <div class="col-md-4">
-                            <button class="btn btn-gradient w-100" onclick="tambahKaryawanBaru()">
-                                <i class="fas fa-plus"></i> Tambah & Generate Akun
-                            </button>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <button class="btn btn-danger btn-sm" onclick="hapusSemuaKaryawan()">
-                            <i class="fas fa-trash-alt"></i> HAPUS SEMUA KARYAWAN
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="card mt-3">
-                <div class="card-header"><i class="fas fa-list"></i> Daftar Semua Karyawan</div>
-                <div class="card-body table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-dark">
-                            <tr><th>No</th><th>Nama & Login</th><th>Status</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody id="tabelManajemenKaryawan">
-                            <tr><td colspan="4" class="text-center">Loading...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB AGENDA -->
-        <div id="tab-agenda" class="tab-konten d-none">
-            <div class="card">
-                <div class="card-header"><i class="fas fa-plus"></i> Tambah Agenda Surat</div>
-                <div class="card-body">
-                    <form id="formAgenda" onsubmit="tambahAgenda(event)">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label>Tanggal</label>
-                                <input type="date" id="agendaTanggal" class="form-control" required>
-                            </div>
-                            <div class="col-md-2">
-                                <label>No. Agenda</label>
-                                <input type="text" id="agendaNo" class="form-control" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label>Jenis Surat</label>
-                                <select id="agendaJenis" class="form-control" required>
-                                    <option value="Masuk">Masuk</option>
-                                    <option value="Keluar">Keluar</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label>No. Surat</label>
-                                <input type="text" id="agendaNoSurat" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="row mt-2">
-                            <div class="col-md-4">
-                                <label>Pengirim/Tujuan</label>
-                                <input type="text" id="agendaKontak" class="form-control" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label>Perihal</label>
-                                <input type="text" id="agendaPerihal" class="form-control" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label>Keterangan</label>
-                                <input type="text" id="agendaKeterangan" class="form-control">
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <button type="submit" class="btn btn-gradient">Simpan Agenda</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="card mt-3">
-                <div class="card-header">
-                    <i class="fas fa-book"></i> Buku Agenda Surat
-                    <input type="text" id="searchAgenda" class="form-control form-control-sm mt-2" placeholder="Cari..." style="width: 200px;" onkeyup="filterAgenda()">
-                </div>
-                <div class="card-body table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-dark">
-                            <tr><th>No</th><th>Tanggal</th><th>No.Agenda</th><th>Jenis</th><th>No.Surat</th><th>Pengirim/Tujuan</th><th>Perihal</th><th>Keterangan</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody id="tabelAgendaBody">
-                            <tr><td colspan="9" class="text-center">Loading...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB MEMO -->
-        <div id="tab-memo" class="tab-konten d-none">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header"><i class="fas fa-edit"></i> Buat Memo</div>
-                        <div class="card-body">
-                            <div class="mb-3"><label>Dari</label><input type="text" id="memoDari" class="form-control"></div>
-                            <div class="mb-3"><label>Kepada</label><input type="text" id="memoKepada" class="form-control"></div>
-                            <div class="mb-3"><label>Tanggal</label><input type="date" id="memoTanggal" class="form-control"></div>
-                            <div class="mb-3"><label>Perihal</label><input type="text" id="memoPerihal" class="form-control"></div>
-                            <div class="mb-3"><label>Isi Memo</label><textarea id="memoIsi" class="form-control" rows="5"></textarea></div>
-                            <button class="btn btn-gradient w-100" onclick="downloadMemoPDF()">Download PDF</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header"><i class="fas fa-eye"></i> Preview Memo</div>
-                        <div class="card-body">
-                            <div class="border p-3 bg-light">
-                                <h5 class="text-center">MEMORANDUM</h5><hr>
-                                <p><strong>Dari</strong> <span id="vDari">: -</span></p>
-                                <p><strong>Kepada</strong> <span id="vKepada">: -</span></p>
-                                <p><strong>Tanggal</strong> <span id="vTanggal">: -</span></p>
-                                <p><strong>Perihal</strong> <span id="vPerihal">: -</span></p><hr>
-                                <p><strong>Isi Memo:</strong></p>
-                                <p id="vIsi">-</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="admin-panel" id="adminPanel">
+    <div class="cart-header"><span>⚙️ Admin</span><span class="close" onclick="closeAllAdmin()">✕</span></div>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('workspace')">Workspace</button>
+      <button class="admin-tab" onclick="switchTab('preview')">Preview</button>
     </div>
-</div>
 
-<div id="toastNotif" class="toast-notif">
-    <div class="toast show">
-        <div class="toast-header bg-success text-white">
-            <strong class="me-auto"><i class="fas fa-bell"></i> Notifikasi</strong>
-            <button type="button" class="btn-close btn-close-white" onclick="this.closest('.toast-notif').style.display='none'"></button>
+    <div class="admin-content active" id="workspaceTab">
+      <h4 style="margin-bottom:8px;">Nomor WhatsApp</h4>
+      <div class="admin-form">
+        <input type="text" id="waNumber" placeholder="628xxxxxxxxxx">
+        <button onclick="saveWaNumber()" style="background:#4d3e44;">💾 Simpan</button>
+      </div>
+
+      <h4 style="margin:16px 0 8px;">Tambah Produk Baru</h4>
+      <div class="admin-form">
+        <input type="text" id="newName" placeholder="Nama Kue">
+        <input type="number" id="newPrice" placeholder="Harga (Rp)">
+        <div class="upload-area" onclick="document.getElementById('imageInput').click()">
+          <span id="uploadText">📸 Klik untuk pilih gambar</span>
+          <img id="uploadPreview" class="upload-preview" alt="Preview">
+          <div class="upload-status" id="uploadStatus"></div>
         </div>
-        <div class="toast-body" id="toastMessage"></div>
-    </div>
-</div>
+        <input type="file" id="imageInput" accept="image/*" style="display:none;" onchange="handleImageSelect(event)">
+        <input type="hidden" id="newImage" value="">
+        <button id="btnAddProduct" onclick="addProduct()" style="background:#4d3e44;">➕ Tambah Produk</button>
+      </div>
 
-<script type="module">
+      <h4 style="margin:16px 0 8px;">Edit Katalog Produk</h4>
+      <div id="adminProductList"></div>
+    </div>
+
+    <div class="admin-content" id="previewTab">
+      <h4 style="margin-bottom:8px;">Preview Toko</h4>
+      <div id="previewProducts"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div>© 2026 Cheseely.id · Fresh Cake Everyday</div>
+    <div class="secret-trigger" id="secretAdminTrigger">cheseely</div>
+  </footer>
+
+  <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+  <script>
+    const CLOUDINARY_CLOUD_NAME = 'donrnz9gy';
+    const CLOUDINARY_UPLOAD_PRESET = 'cheseely_preset';
+    const defaultProducts = [
+      { name: 'Cheese Cake', price: 95000, image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=400&fit=crop' },
+      { name: 'Red Velvet', price: 120000, image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?w=400&h=400&fit=crop' }
+    ];
+
+    let products = [], waNumber = '6281234567890', cart = [], total = 0, isAdminLoggedIn = false, reviews = [];
+    let uploadedImageUrl = '', uploadedProofUrl = '';
+
+    function getProducts(){ return products; }
+    function getWaNumber(){ return waNumber; }
+
+    function uploadFileToCloudinary(file, statusEl, done){
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'cheseely-uploads');
+      statusEl.textContent = '⏳ Uploading...';
+      fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method:'POST', body: formData })
+        .then(r => r.json())
+        .then(d => {
+          if (!d.secure_url) throw new Error();
+          statusEl.textContent = '✅ Upload sukses';
+          done(d.secure_url);
+        })
+        .catch(() => statusEl.textContent = '❌ Upload gagal');
+    }
+
+    function handleImageSelect(e){
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { const img = document.getElementById('uploadPreview'); img.src = ev.target.result; img.classList.add('show'); };
+      reader.readAsDataURL(file);
+      uploadFileToCloudinary(file, document.getElementById('uploadStatus'), (url)=>{
+        uploadedImageUrl = url; document.getElementById('newImage').value = url;
+      });
+    }
+
+    function handleProofSelect(e){
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => { const img = document.getElementById('proofPreview'); img.src = ev.target.result; img.classList.add('show'); };
+      reader.readAsDataURL(file);
+      uploadFileToCloudinary(file, document.getElementById('proofStatus'), (url)=>{
+        uploadedProofUrl = url; document.getElementById('proofImageUrl').value = url;
+      });
+    }
+
+    function renderProducts(){
+      const c = document.getElementById('product-list');
+      c.innerHTML = getProducts().map(p => `
+        <div class="card">
+          <img src="${p.image}" alt="${p.name}">
+          <div class="card-content">
+            <h3>${p.name}</h3>
+            <div class="price">Rp ${p.price.toLocaleString('id-ID')}</div>
+            <button class="btn-add" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price})">+ Keranjang</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleCart(){ document.getElementById('cart').classList.toggle('active'); document.getElementById('cartOverlay').classList.toggle('active'); }
+    function closeCart(){ document.getElementById('cart').classList.remove('active'); document.getElementById('cartOverlay').classList.remove('active'); }
+
+    function addToCart(name,price){ cart.push({name,price}); total += price; updateCart(); }
+    function removeFromCart(i){ total -= cart[i].price; cart.splice(i,1); updateCart(); }
+
+    function updateCart(){
+      const c = document.getElementById('cart-items');
+      c.innerHTML = cart.length ? cart.map((it,i)=>`
+        <div class="cart-item"><div><b>${it.name}</b><br><small>Rp ${it.price.toLocaleString('id-ID')}</small></div><button class="btn-remove" onclick="removeFromCart(${i})">✕</button></div>
+      `).join('') : '<p style="color:#8f7e7a;text-align:center;padding:30px 0;">Keranjang kosong</p>';
+      document.getElementById('total').innerText = total.toLocaleString('id-ID');
+      document.getElementById('cart-count').innerText = cart.length;
+    }
+
+    function openOrderForm(){ if (!cart.length) return alert('Keranjang kosong!'); document.getElementById('orderFormModal').classList.add('active'); document.getElementById('formOverlay').classList.add('active'); }
+    function closeOrderForm(){ document.getElementById('orderFormModal').classList.remove('active'); document.getElementById('formOverlay').classList.remove('active'); }
+
+    function generateQrisNominal(nominal){
+      const base = "00020101021126610014COM.GO-JEK.WWW01189360091431059853890210G1059853890303UMI51440014ID.CO.QRIS.WWW0215ID10265149406040303UMI520458125303360";
+      const tail = "5802ID5911Cheesely_id6006PADANG61052516362070703A016304";
+      const amount = String(Math.floor(nominal));
+      const tag54 = `54${String(amount.length).padStart(2,'0')}${amount}`;
+      const payload = base + tag54 + tail;
+      let crc = 0xFFFF;
+      for (const b of new TextEncoder().encode(payload)) {
+        crc ^= (b << 8);
+        for (let i=0;i<8;i++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF;
+      }
+      return payload + crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+
+    function renderQRIS(nominal){
+      QRCode.toCanvas(document.getElementById('qrisCanvas'), generateQrisNominal(nominal), { width:200, margin:1 });
+    }
+
+    function openQrisModal(){
+      if (!cart.length) return alert('Keranjang kosong!');
+      document.getElementById('qrisTotal').innerText = total.toLocaleString('id-ID');
+      document.getElementById('qrisModal').classList.add('active');
+      document.getElementById('reviewOverlay').classList.add('active');
+      renderQRIS(total);
+    }
+    function closeQrisModal(){ document.getElementById('qrisModal').classList.remove('active'); document.getElementById('reviewOverlay').classList.remove('active'); }
+
+    async function submitOrder(){
+      const name = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const address = document.getElementById('customerAddress').value.trim();
+      const note = document.getElementById('customerNote').value.trim();
+      const proof = document.getElementById('proofImageUrl').value.trim();
+      if (!name || !phone || !address) return alert('Mohon isi Nama, Telepon, dan Alamat!');
+
+      let message = '🍰 *PESANAN BARU - Cheseely.id*%0A%0A';
+      message += `👤 *Nama:* ${name}%0A📞 *Telp:* ${phone}%0A📍 *Alamat:* ${address}%0A`;
+      if (note) message += `📝 *Catatan:* ${note}%0A`;
+      message += '%0A📋 *Detail Pesanan:*%0A';
+      cart.forEach((it,i)=> message += `${i+1}. ${it.name} - Rp ${it.price.toLocaleString('id-ID')}%0A`);
+      message += `%0A💰 *Total: Rp ${total.toLocaleString('id-ID')}*%0A`;
+      if (proof) message += `%0A🧾 *Bukti Bayar:* ${encodeURIComponent(proof)}%0A`;
+
+      const orderData = { name, phone, address, note, items: cart, total, proofImage: proof || '', createdAt: Date.now() };
+      try { await window.dbSet(window.dbRef(window.rtdb, `cheseely/orders/${Date.now()}`), orderData); } catch(e){}
+
+      window.open(`https://wa.me/${getWaNumber()}?text=${message}`, '_blank');
+      closeOrderForm();
+    }
+
+    function openChat(){
+      const text = encodeURIComponent('Halo kak, saya mau tanya soal produk Cheseely 😊');
+      window.open(`https://wa.me/${getWaNumber()}?text=${text}`, '_blank');
+    }
+
+    function searchProduct(){
+      const kw = (document.getElementById('search').value || '').toLowerCase();
+      document.querySelectorAll('.card').forEach(card=>{
+        const t = (card.querySelector('h3')?.innerText || '').toLowerCase();
+        card.style.display = t.includes(kw) ? 'flex' : 'none';
+      });
+    }
+
+    function openAdminLogin(){ document.getElementById('adminLoginModal').classList.add('active'); document.getElementById('adminOverlay').classList.add('active'); }
+    function closeAdminLogin(){ document.getElementById('adminLoginModal').classList.remove('active'); document.getElementById('adminOverlay').classList.remove('active'); }
+    function openAdminPanel(){ document.getElementById('adminPanel').classList.add('active'); document.getElementById('adminOverlay').classList.add('active'); document.getElementById('waNumber').value = waNumber; renderAdminProductList(); }
+    function closeAllAdmin(){ document.getElementById('adminPanel').classList.remove('active'); document.getElementById('adminLoginModal').classList.remove('active'); document.getElementById('adminOverlay').classList.remove('active'); }
+
+    function adminLogin(){
+      if (document.getElementById('adminUser').value === 'admin' && document.getElementById('adminPass').value === 'admin123') { isAdminLoggedIn = true; closeAdminLogin(); openAdminPanel(); }
+      else alert('Username atau password salah!');
+    }
+
+    function switchTab(t){
+      document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.admin-content').forEach(c=>c.classList.remove('active'));
+      if (t === 'workspace'){ document.querySelector('.admin-tab:nth-child(1)').classList.add('active'); document.getElementById('workspaceTab').classList.add('active'); }
+      else { document.querySelector('.admin-tab:nth-child(2)').classList.add('active'); document.getElementById('previewTab').classList.add('active'); renderPreview(); }
+    }
+
+    async function saveWaNumber(){
+      const n = document.getElementById('waNumber').value.trim(); if (!n) return;
+      try { await window.dbSet(window.dbRef(window.rtdb, 'cheseely/waNumber'), n); waNumber = n; alert('Nomor tersimpan!'); } catch(e){ alert('Gagal simpan'); }
+    }
+
+    async function addProduct(){
+      const n = document.getElementById('newName').value.trim();
+      const p = parseInt(document.getElementById('newPrice').value);
+      const i = uploadedImageUrl || document.getElementById('newImage').value.trim();
+      if (!n || !p || !i) return alert('Lengkapi semua field');
+      products.push({ name:n, price:p, image:i });
+      await syncProducts();
+      document.getElementById('newName').value=''; document.getElementById('newPrice').value=''; document.getElementById('newImage').value=''; uploadedImageUrl='';
+      document.getElementById('uploadPreview').classList.remove('show'); document.getElementById('uploadStatus').textContent='';
+      renderProducts(); renderAdminProductList();
+    }
+
+    function renderAdminProductList(){
+      const c = document.getElementById('adminProductList');
+      c.innerHTML = products.map((p,i)=>`
+        <div class="product-list-item">
+          <div class="product-list-item-head">
+            <span>${p.name} · Rp${p.price.toLocaleString('id-ID')}</span>
+            <div class="product-action">
+              <button class="btn-edit" onclick="toggleEdit(${i})">Edit</button>
+              <button class="btn-del" onclick="deleteProduct(${i})">Hapus</button>
+            </div>
+          </div>
+          <div class="edit-wrap" id="editWrap${i}">
+            <input type="text" id="editName${i}" value="${p.name}">
+            <input type="number" id="editPrice${i}" value="${p.price}">
+            <input type="text" id="editImage${i}" value="${p.image}">
+            <button style="background:#2f855a;" onclick="saveEditProduct(${i})">Simpan Edit</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleEdit(i){ document.getElementById(`editWrap${i}`).classList.toggle('active'); }
+
+    async function saveEditProduct(i){
+      const n = document.getElementById(`editName${i}`).value.trim();
+      const p = parseInt(document.getElementById(`editPrice${i}`).value);
+      const img = document.getElementById(`editImage${i}`).value.trim();
+      if (!n || !p || !img) return alert('Field edit belum lengkap');
+      products[i] = { name:n, price:p, image:img };
+      await syncProducts();
+      renderProducts(); renderAdminProductList(); renderPreview();
+      alert('Produk berhasil di-edit');
+    }
+
+    async function deleteProduct(i){
+      if (!confirm('Hapus produk ini?')) return;
+      products.splice(i,1);
+      await syncProducts();
+      renderProducts(); renderAdminProductList(); renderPreview();
+    }
+
+    async function syncProducts(){
+      try { await window.dbSet(window.dbRef(window.rtdb, 'cheseely/products'), products); }
+      catch(e){ alert('Gagal sync produk ke database'); }
+    }
+
+    function renderPreview(){
+      const c = document.getElementById('previewProducts');
+      c.innerHTML = products.map(p=>`<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #f5ede7;"><img src="${p.image}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;"><div><strong>${p.name}</strong><br><span style="color:#b4846c;">Rp${p.price.toLocaleString('id-ID')}</span></div></div>`).join('');
+    }
+
+    function submitReview(){
+      const name = document.getElementById('reviewName').value.trim() || 'Anonim';
+      const text = document.getElementById('reviewText').value.trim();
+      if (!text) return alert('Tulis ulasan dulu ya!');
+      reviews.push({ name, text, date: new Date().toLocaleDateString('id-ID') });
+      document.getElementById('reviewName').value=''; document.getElementById('reviewText').value='';
+      renderReviews();
+      try { window.dbSet(window.dbRef(window.rtdb, 'cheseely/reviews'), reviews); } catch(e){}
+    }
+
+    function renderReviews(){
+      const c = document.getElementById('reviewList');
+      c.innerHTML = reviews.length ? reviews.slice().reverse().map(r=>`<div style="background:#fdfbf9;padding:12px;border-radius:12px;margin-bottom:8px;"><strong>${r.name}</strong> <small>${r.date}</small><p>${r.text}</p></div>`).join('') : '<p style="color:#8f7e7a;">Belum ada ulasan.</p>';
+    }
+
+    let clicks=0,timer=null;
+    document.getElementById('secretAdminTrigger').addEventListener('click', ()=>{
+      clicks++; clearTimeout(timer);
+      if (clicks>=5){ clicks=0; isAdminLoggedIn ? openAdminPanel() : openAdminLogin(); }
+      timer=setTimeout(()=>clicks=0,2000);
+    });
+
+    window.loadInitialData = async function(){
+      try {
+        const ps = await window.dbGet(window.dbRef(window.rtdb, 'cheseely/products'));
+        const ws = await window.dbGet(window.dbRef(window.rtdb, 'cheseely/waNumber'));
+        const rs = await window.dbGet(window.dbRef(window.rtdb, 'cheseely/reviews'));
+        products = ps.exists() && Array.isArray(ps.val()) && ps.val().length ? ps.val() : defaultProducts;
+        waNumber = ws.exists() && ws.val() ? ws.val() : '6281234567890';
+        reviews = rs.exists() && Array.isArray(rs.val()) ? rs.val() : [];
+        if (!ps.exists()) await window.dbSet(window.dbRef(window.rtdb, 'cheseely/products'), products);
+      } catch(e){
+        products = defaultProducts; waNumber='6281234567890'; reviews=[];
+      }
+      renderProducts(); renderReviews(); updateCart();
+    };
+  </script>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    import { getDatabase, ref, set, get, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
-    // Firebase 
     const firebaseConfig = {
-        apiKey: "AIzaSyBEafF9NJQZMVaC0H1uKWkvSESOuCg8nIs",
-        authDomain: "toserba-enak.firebaseapp.com",
-        databaseURL: "https://toserba-enak-default-rtdb.firebaseio.com",
-        projectId: "toserba-enak",
-        storageBucket: "toserba-enak.firebasestorage.app",
-        messagingSenderId: "915285236417",
-        appId: "1:915285236417:web:dfb4d2d6cecc85f5fcd240",
-        measurementId: "G-FLMF462XNP"
+      apiKey: "AIzaSyB8zBpyRqgMOt2ULREcpYfsw8W_gUJhkXs",
+      authDomain: "arsip-digital-5120c.firebaseapp.com",
+      projectId: "arsip-digital-5120c",
+      storageBucket: "arsip-digital-5120c.firebasestorage.app",
+      messagingSenderId: "826061942517",
+      appId: "1:826061942517:web:9615ff8b68bb097b0a5fbc",
+      measurementId: "G-Q3CQ3E7C15",
+      databaseURL: "https://arsip-digital-5120c-default-rtdb.firebaseio.com"
     };
 
     const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-
-    let daftarKaryawan = [];
-    let dataAgenda = [];
-    let dataChatGrup = [];
-    let onlineUsers = {};
-    let currentUser = null;
-    let currentUserNama = "";
-    let listenersReady = false;
-
-    function showToast(msg) {
-        const toast = document.getElementById('toastNotif');
-        document.getElementById('toastMessage').innerText = msg;
-        toast.style.display = 'block';
-        setTimeout(() => { toast.style.display = 'none'; }, 3000);
-    }
-
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function getTodayDate() {
-        return new Date().toISOString().split('T')[0];
-    }
-
-    function formatTanggal(dateStr) {
-        if (!dateStr) return '-';
-        const parts = dateStr.split('-');
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-
-    function guardSession() {
-        const isAdmin = sessionStorage.getItem('isAdminLoggedIn') === 'true';
-        const isKaryawan = sessionStorage.getItem('isKaryawanLoggedIn') === 'true';
-        if (!isAdmin && !isKaryawan) {
-            document.getElementById('screen-main').classList.add('d-none');
-            document.getElementById('screen-login').classList.remove('d-none');
-            throw new Error('SESSION_EXPIRED');
-        }
-    }
-
-    function showMain() {
-        document.getElementById('screen-login').classList.add('d-none');
-        document.getElementById('screen-main').classList.remove('d-none');
-        const isAdmin = sessionStorage.getItem('role') === 'admin';
-        document.getElementById('adminOnlyTabs').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('adminOnlyTabs2').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('adminOnlyTabs3').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('currentUserDisplay').innerHTML = `<i class="fas fa-user-circle"></i> ${escapeHtml(currentUserNama || currentUser)}`;
-    }
-
-    window.prosesLogin = async function(e) {
-        e.preventDefault();
-        const u = document.getElementById('username').value.trim();
-        const p = document.getElementById('password').value;
-        const alertEl = document.getElementById('login-alert');
-        alertEl.classList.add('d-none');
-
-        if (u === "adminenakkkk" && p === "toserba2026") {
-            sessionStorage.setItem('isAdminLoggedIn', 'true');
-            sessionStorage.setItem('isKaryawanLoggedIn', 'false');
-            sessionStorage.setItem('role', 'admin');
-            sessionStorage.setItem('currentUser', u);
-            currentUser = u;
-            currentUserNama = "Admin";
-            showMain();
-            initFirebaseListeners();
-            await set(ref(database, `online/${u}`), true);
-            showToast('Selamat datang Admin!');
-            return;
-        }
-
-        try {
-            const snap = await get(ref(database, 'karyawan'));
-            const data = snap.val() || {};
-            const foundEntry = Object.entries(data).find(([id, val]) => val.username === u && val.password === p && val.status === 'Aktif');
-
-            if (foundEntry) {
-                const [karyawanId, karyawanData] = foundEntry;
-                sessionStorage.setItem('isKaryawanLoggedIn', 'true');
-                sessionStorage.setItem('isAdminLoggedIn', 'false');
-                sessionStorage.setItem('role', 'karyawan');
-                sessionStorage.setItem('currentUser', u);
-                currentUser = u;
-                currentUserNama = karyawanData.nama;
-                showMain();
-                initFirebaseListeners();
-                await set(ref(database, `online/${u}`), true);
-                
-                // Pesan welcome ke grup
-                const welcomeMsg = `🎉 Selamat datang ${currentUserNama} bergabung di grup chat! 🎉`;
-                await push(ref(database, 'chatGrup'), {
-                    from: "System",
-                    fromName: "System",
-                    pesan: welcomeMsg,
-                    waktu: Date.now(),
-                    type: "system"
-                });
-                
-                showToast(`Selamat datang ${karyawanData.nama}!`);
-            } else {
-                alertEl.classList.remove('d-none');
-                alertEl.innerHTML = 'Username / Password salah!';
-            }
-        } catch (err) {
-            console.error(err);
-            alertEl.classList.remove('d-none');
-            alertEl.innerHTML = 'Error koneksi database! Periksa Firebase Rules!';
-        }
-    };
-
-    window.prosesLogout = async function() {
-        if (currentUser && currentUser !== "adminenakkkk") {
-            const leaveMsg = `👋 ${currentUserNama} telah meninggalkan grup`;
-            await push(ref(database, 'chatGrup'), {
-                from: "System",
-                fromName: "System",
-                pesan: leaveMsg,
-                waktu: Date.now(),
-                type: "system"
-            });
-            await set(ref(database, `online/${currentUser}`), false);
-        } else if (currentUser === "adminenakkkk") {
-            await set(ref(database, `online/${currentUser}`), false);
-        }
-        sessionStorage.clear();
-        location.reload();
-    };
-
-    // CHAT
-    function updateActiveUsersList() {
-        const container = document.getElementById('activeUsersList');
-        if (!container) return;
-        const activeUsers = Object.entries(onlineUsers).filter(([u, on]) => on === true).map(([u]) => u);
-        document.getElementById('totalOnlineBadge').innerHTML = `${activeUsers.length} Online`;
-        document.getElementById('statOnlineNow').innerHTML = activeUsers.length;
-        if (activeUsers.length === 0) {
-            container.innerHTML = '<small class="text-muted">Tidak ada user online</small>';
-            return;
-        }
-        container.innerHTML = activeUsers.map(user => {
-            const karyawan = daftarKaryawan.find(k => k.username === user);
-            const nama = karyawan ? karyawan.nama : user;
-            return `<div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                        <span><span class="online-indicator online"></span> ${escapeHtml(nama)}</span>
-                        <small class="text-success">Online</small>
-                    </div>`;
-        }).join('');
-    }
-
-    function loadChatGrup() {
-        const box = document.getElementById('boxChat');
-        if (!box) return;
-        if (dataChatGrup.length === 0) {
-            box.innerHTML = '<div class="text-center text-muted p-4">Belum ada pesan. Mulai chat!</div>';
-            return;
-        }
-        box.innerHTML = dataChatGrup.sort((a,b) => (a.waktu||0)-(b.waktu||0)).map(msg => {
-            const time = msg.waktu ? new Date(msg.waktu).toLocaleTimeString('id-ID', {hour:'2-digit',minute:'2-digit'}) : '';
-            const isSystem = msg.type === 'system';
-            const isOwn = msg.from === currentUser;
-            if (isSystem) {
-                return `<div class="text-center my-2"><small class="bg-secondary text-white px-3 py-1 rounded-pill">${escapeHtml(msg.pesan)}</small></div>`;
-            }
-            return `<div class="mb-3 ${isOwn ? 'text-end' : 'text-start'}">
-                        <div class="d-inline-block p-2 rounded shadow-sm ${isOwn ? 'bg-primary text-white' : 'bg-white border'}" style="max-width:75%">
-                            <small class="d-block mb-1"><b>${isOwn ? 'Anda' : escapeHtml(msg.fromName || msg.from)}</b></small>
-                            <div>${escapeHtml(msg.pesan)}</div>
-                            <small class="d-block mt-1" style="font-size:10px">${time}</small>
-                        </div>
-                    </div>`;
-        }).join('');
-        box.scrollTop = box.scrollHeight;
-    }
-
-    window.kirimChatGrup = async function() {
-        if (!currentUser) return showToast('Login dulu!');
-        const pesan = document.getElementById('inputPesanChat').value.trim();
-        if (!pesan) return showToast('Pesan kosong');
-        await push(ref(database, 'chatGrup'), {
-            from: currentUser,
-            fromName: currentUserNama,
-            pesan: pesan,
-            waktu: Date.now(),
-            type: "message"
-        });
-        document.getElementById('inputPesanChat').value = '';
-    };
-
-    // ABSENSI
-    window.absenMasuk = async function() {
-        if (!currentUser) return showToast('Login dulu!');
-        const today = getTodayDate();
-        const absenRef = ref(database, `absensi/${currentUser}/${today}`);
-        const snap = await get(absenRef);
-        if (snap.exists() && snap.val().masuk) return showToast('Sudah absen masuk hari ini!');
-        const waktu = new Date().toLocaleTimeString('id-ID');
-        await set(absenRef, { 
-            masuk: waktu, 
-            tanggal: today, 
-            nama: currentUserNama,
-            username: currentUser,
-            status: 'Hadir' 
-        });
-        showToast(`✅ Absen masuk jam ${waktu}`);
-        loadRiwayatAbsensiSaya();
-        loadRekapAbsensi();
-        
-        // Notifikasi ke grup
-        await push(ref(database, 'chatGrup'), {
-            from: "System",
-            fromName: "System",
-            pesan: `📋 ${currentUserNama} telah absen masuk jam ${waktu}`,
-            waktu: Date.now(),
-            type: "system"
-        });
-    };
-
-    window.absenPulang = async function() {
-        if (!currentUser) return showToast('Login dulu!');
-        const today = getTodayDate();
-        const absenRef = ref(database, `absensi/${currentUser}/${today}`);
-        const snap = await get(absenRef);
-        if (!snap.exists()) return showToast('Belum absen masuk hari ini!');
-        if (snap.val().pulang) return showToast('Sudah absen pulang hari ini!');
-        const waktu = new Date().toLocaleTimeString('id-ID');
-        await update(absenRef, { pulang: waktu });
-        showToast(`✅ Absen pulang jam ${waktu}`);
-        loadRiwayatAbsensiSaya();
-    };
-
-    async function loadRiwayatAbsensiSaya() {
-        const container = document.getElementById('riwayatAbsensiSaya');
-        if (!container) return;
-        const snap = await get(ref(database, `absensi/${currentUser}`));
-        const data = snap.val() || {};
-        const entries = Object.entries(data).sort((a,b) => b[0].localeCompare(a[0]));
-        if (entries.length === 0) {
-            container.innerHTML = '<div class="text-center text-muted">Belum ada riwayat absensi</div>';
-            return;
-        }
-        container.innerHTML = entries.map(([tgl, val]) => `
-            <div class="border-bottom p-2">
-                <div class="d-flex justify-content-between">
-                    <strong>${formatTanggal(tgl)}</strong>
-                    <span class="badge bg-success">${val.status || 'Hadir'}</span>
-                </div>
-                <div class="small text-muted">
-                    <i class="fas fa-sign-in-alt"></i> Masuk: ${val.masuk || '-'} &nbsp;
-                    <i class="fas fa-sign-out-alt"></i> Pulang: ${val.pulang || '-'}
-                </div>
-            </div>
-        `).join('');
-    }
-
-    async function loadRekapAbsensi() {
-        const tbody = document.getElementById('tabelRekapAbsensiBody');
-        if (!tbody) return;
-        const aktif = daftarKaryawan.filter(k => k.status === 'Aktif');
-        if (aktif.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">Belum ada data karyawan</td></tr>';
-            return;
-        }
-        const rekap = [];
-        for (const k of aktif) {
-            const snap = await get(ref(database, `absensi/${k.username}`));
-            const absensi = snap.val() || {};
-            let hadir = 0;
-            Object.values(absensi).forEach(a => { if (a.masuk) hadir++; });
-            rekap.push({ nama: k.nama, hadir });
-        }
-        tbody.innerHTML = rekap.map((r,i) => `
-            <tr>
-                <td>${i+1}</td>
-                <td>${escapeHtml(r.nama)}</td>
-                <td class="text-success fw-bold">${r.hadir}</td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-            </tr>
-        `).join('');
-    }
-
-    window.exportAbsensiExcel = async function() {
-        const aktif = daftarKaryawan.filter(k => k.status === 'Aktif');
-        const data = [];
-        for (const k of aktif) {
-            const snap = await get(ref(database, `absensi/${k.username}`));
-            const absensi = snap.val() || {};
-            let hadir = 0;
-            Object.values(absensi).forEach(a => { if (a.masuk) hadir++; });
-            data.push({ 'Nama Karyawan': k.nama, 'Username': k.username, 'Total Hadir': hadir });
-        }
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'Rekap Absensi');
-        XLSX.writeFile(wb, `Rekap_Absensi_${getTodayDate()}.xlsx`);
-        showToast('✅ Export Excel berhasil!');
-    };
-
-    window.exportAbsensiPDF = async function() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('landscape');
-        doc.setFontSize(16);
-        doc.text('LAPORAN REKAP ABSENSI KARYAWAN', 148, 15, { align: 'center' });
-        doc.setFontSize(10);
-        doc.text(`Tanggal Cetak: ${new Date().toLocaleString()}`, 148, 22, { align: 'center' });
-        
-        const aktif = daftarKaryawan.filter(k => k.status === 'Aktif');
-        const body = [];
-        for (const k of aktif) {
-            const snap = await get(ref(database, `absensi/${k.username}`));
-            const absensi = snap.val() || {};
-            let hadir = 0;
-            Object.values(absensi).forEach(a => { if (a.masuk) hadir++; });
-            body.push([k.nama, k.username, hadir]);
-        }
-        doc.autoTable({ 
-            head: [['Nama Karyawan', 'Username', 'Total Hadir']], 
-            body: body, 
-            startY: 30,
-            theme: 'striped',
-            headStyles: { fillColor: [102, 126, 234] }
-        });
-        doc.save(`Laporan_Absensi_${getTodayDate()}.pdf`);
-        showToast('✅ Export PDF berhasil!');
-    };
-
-    // KARYAWAN
-    function renderKaryawan() {
-        const tbody = document.getElementById('tabelManajemenKaryawan');
-        if (!tbody) return;
-        if (daftarKaryawan.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Belum ada data karyawan</td></tr>';
-            return;
-        }
-        tbody.innerHTML = daftarKaryawan.map((k, i) => `
-            <tr>
-                <td>${i+1}</td>
-                <td>
-                    <strong>${escapeHtml(k.nama)}</strong><br>
-                    <small class="text-muted">User: <code>${escapeHtml(k.username)}</code></small><br>
-                    <small class="text-muted">Pass: <code>${escapeHtml(k.password)}</code></small>
-                </td>
-                <td><span class="badge bg-success">${k.status || 'Aktif'}</span></td>
-                <td>
-                    <button class="btn btn-sm btn-danger" onclick="hapusKaryawan('${k.id}','${escapeHtml(k.nama)}')">
-                        <i class="fas fa-trash"></i> Hapus
-                    </button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    window.tambahKaryawanBaru = async function() {
-        guardSession();
-        const nama = document.getElementById('inputNamaKaryawanBaru').value.trim();
-        if (!nama) return showToast('Nama tidak boleh kosong!');
-        if (daftarKaryawan.some(k => k.nama.toLowerCase() === nama.toLowerCase())) {
-            return showToast('Nama sudah ada!');
-        }
-        const base = nama.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 6);
-        const nomor = Math.floor(Math.random() * 900 + 100);
-        const username = base + nomor;
-        const password = Math.random().toString(36).slice(-8);
-        const newRef = push(ref(database, 'karyawan'));
-        await set(newRef, {
-            nama: nama,
-            status: 'Aktif',
-            username: username,
-            password: password,
-            createdAt: Date.now()
-        });
-        document.getElementById('inputNamaKaryawanBaru').value = '';
-        showToast(`✅ Akun berhasil dibuat!\nUsername: ${username}\nPassword: ${password}`);
-    };
-
-    window.hapusSemuaKaryawan = async function() {
-        guardSession();
-        if (!confirm('⚠️ PERINGATAN! Ini akan menghapus SEMUA data karyawan. Lanjutkan?')) return;
-        showToast('⏳ Menghapus semua karyawan...');
-        for (const karyawan of daftarKaryawan) {
-            await remove(ref(database, `karyawan/${karyawan.id}`));
-        }
-        showToast('✅ Semua karyawan telah dihapus!');
-    };
-
-    window.hapusKaryawan = async function(id, nama) {
-        guardSession();
-        if (!confirm(`Hapus permanen karyawan "${nama}"?`)) return;
-        await remove(ref(database, `karyawan/${id}`));
-        showToast(`✅ Karyawan ${nama} telah dihapus!`);
-    };
-
-    // AGENDA SURAT
-    function renderAgenda() {
-        const tbody = document.getElementById('tabelAgendaBody');
-        if (!tbody) return;
-        if (dataAgenda.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center">Belum ada data agenda</td></tr>';
-            return;
-        }
-        const sorted = [...dataAgenda].sort((a,b) => b.createdAt - a.createdAt);
-        tbody.innerHTML = sorted.map((item, i) => `
-            <tr>
-                <td>${i+1}</td>
-                <td>${formatTanggal(item.tanggal)}</td>
-                <td>${escapeHtml(item.noAgenda)}</td>
-                <td><span class="badge ${item.jenis === 'Masuk' ? 'bg-info' : 'bg-warning'}">${escapeHtml(item.jenis)}</span></td>
-                <td>${escapeHtml(item.noSurat)}</td>
-                <td>${escapeHtml(item.kontak)}</td>
-                <td>${escapeHtml(item.perihal)}</td>
-                <td>${escapeHtml(item.keterangan || '-')}</td>
-                <td><button class="btn btn-sm btn-danger" onclick="hapusAgenda('${item.id}')"><i class="fas fa-trash"></i></button></td>
-            </tr>
-        `).join('');
-    }
-
-    window.tambahAgenda = async function(e) {
-        e.preventDefault();
-        guardSession();
-        const newRef = push(ref(database, 'agenda'));
-        await set(newRef, {
-            tanggal: document.getElementById('agendaTanggal').value,
-            noAgenda: document.getElementById('agendaNo').value,
-            jenis: document.getElementById('agendaJenis').value,
-            noSurat: document.getElementById('agendaNoSurat').value,
-            kontak: document.getElementById('agendaKontak').value,
-            perihal: document.getElementById('agendaPerihal').value,
-            keterangan: document.getElementById('agendaKeterangan').value,
-            createdAt: Date.now()
-        });
-        document.getElementById('formAgenda').reset();
-        document.getElementById('agendaTanggal').valueAsDate = new Date();
-        showToast('✅ Agenda surat berhasil ditambahkan!');
-    };
-
-    window.hapusAgenda = async function(id) {
-        guardSession();
-        if (!confirm('Hapus agenda ini?')) return;
-        await remove(ref(database, `agenda/${id}`));
-        showToast('✅ Agenda dihapus.');
-    };
-
-    window.filterAgenda = function() {
-        const search = document.getElementById('searchAgenda').value.toLowerCase();
-        const rows = document.querySelectorAll('#tabelAgendaBody tr');
-        rows.forEach(row => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(search) ? '' : 'none';
-        });
-    };
-
-    // MEMO PDF
-    window.downloadMemoPDF = function() {
-        guardSession();
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(20);
-        doc.text('MEMORANDUM', 105, 20, { align: 'center' });
-        doc.setFontSize(12);
-        doc.text(`Dari: ${document.getElementById('memoDari').value || '-'}`, 20, 45);
-        doc.text(`Kepada: ${document.getElementById('memoKepada').value || '-'}`, 20, 55);
-        doc.text(`Tanggal: ${document.getElementById('memoTanggal').value || '-'}`, 20, 65);
-        doc.text(`Perihal: ${document.getElementById('memoPerihal').value || '-'}`, 20, 75);
-        const isi = document.getElementById('memoIsi').value || '-';
-        const split = doc.splitTextToSize(isi, 170);
-        doc.text(split, 20, 90);
-        doc.save(`Memo_${Date.now()}.pdf`);
-        showToast('✅ Memo berhasil diunduh!');
-    };
-
-    // UPDATE STAT
-    function updateStat() {
-        document.getElementById('statTotalKaryawan').innerHTML = daftarKaryawan.length;
-    }
-
-    // TAB NAVIGATION
-    window.bukaTab = function(event, tabName) {
-        guardSession();
-        document.querySelectorAll('.tab-konten').forEach(el => el.classList.add('d-none'));
-        document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
-        document.getElementById(`tab-${tabName}`).classList.remove('d-none');
-        if (event && event.currentTarget) event.currentTarget.classList.add('active');
-        if (tabName === 'agenda') renderAgenda();
-        if (tabName === 'karyawan') renderKaryawan();
-        if (tabName === 'absensi') {
-            loadRiwayatAbsensiSaya();
-            loadRekapAbsensi();
-        }
-    };
-
-    // FIREBASE LISTENERS
-    function initFirebaseListeners() {
-        if (listenersReady) return;
-        listenersReady = true;
-
-        onValue(ref(database, 'agenda'), (snap) => {
-            dataAgenda = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
-            if (document.getElementById('tab-agenda') && !document.getElementById('tab-agenda').classList.contains('d-none')) {
-                renderAgenda();
-            }
-        });
-
-        onValue(ref(database, 'karyawan'), (snap) => {
-            daftarKaryawan = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({
-                id, nama: val.nama, status: val.status || 'Aktif',
-                username: val.username || '', password: val.password || ''
-            })) : [];
-            renderKaryawan();
-            updateStat();
-            if (document.getElementById('tab-absensi') && !document.getElementById('tab-absensi').classList.contains('d-none')) {
-                loadRekapAbsensi();
-            }
-        });
-
-        onValue(ref(database, 'chatGrup'), (snap) => {
-            dataChatGrup = snap.val() ? Object.entries(snap.val()).map(([id, val]) => ({ id, ...val })) : [];
-            loadChatGrup();
-        });
-
-        onValue(ref(database, 'online'), (snap) => {
-            onlineUsers = snap.val() || {};
-            updateActiveUsersList();
-        });
-
-        // Keep alive setiap 30 detik
-        setInterval(async () => {
-            if (currentUser && (sessionStorage.getItem('isKaryawanLoggedIn') === 'true' || sessionStorage.getItem('isAdminLoggedIn') === 'true')) {
-                await set(ref(database, `online/${currentUser}`), true);
-            }
-        }, 30000);
-    }
-
-    // INITIALIZATION
-    function init() {
-        // Preview memo
-        const memoFields = ['memoDari', 'memoKepada', 'memoTanggal', 'memoPerihal', 'memoIsi'];
-        memoFields.forEach(field => {
-            const el = document.getElementById(field);
-            if (el) {
-                el.addEventListener('input', function() {
-                    const previewId = 'v' + field.charAt(0).toUpperCase() + field.slice(1);
-                    const previewEl = document.getElementById(previewId);
-                    if (previewEl) previewEl.innerText = ': ' + (this.value || '-');
-                });
-            }
-        });
-        
-        document.getElementById('agendaTanggal').valueAsDate = new Date();
-        
-        const isAdmin = sessionStorage.getItem('isAdminLoggedIn') === 'true';
-        const isKaryawan = sessionStorage.getItem('isKaryawanLoggedIn') === 'true';
-        
-        if (isAdmin || isKaryawan) {
-            currentUser = sessionStorage.getItem('currentUser');
-            if (isAdmin) {
-                currentUserNama = "Admin";
-            } else {
-                const karyawan = daftarKaryawan.find(k => k.username === currentUser);
-                currentUserNama = karyawan ? karyawan.nama : currentUser;
-            }
-            showMain();
-            initFirebaseListeners();
-            if (currentUser) set(ref(database, `online/${currentUser}`), true);
-        } else {
-            document.getElementById('screen-login').classList.remove('d-none');
-            document.getElementById('screen-main').classList.add('d-none');
-        }
-    }
-
-    init();
-</script>
+    const rtdb = getDatabase(app);
+    try { getAnalytics(app); } catch(e) {}
+    window.rtdb = rtdb;
+    window.dbRef = ref;
+    window.dbGet = get;
+    window.dbSet = set;
+    window.loadInitialData();
+  </script>
 </body>
 </html>
